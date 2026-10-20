@@ -1,82 +1,124 @@
 
-require('dotenv').config();
-const express = require('express');
-const cors = require('cors');
-const helmet = require('helmet');
-const morgan = require('morgan');
-const path = require('path');
+import React from 'react';
+// FIX: Reordered imports to ensure global JSX namespace augmentation from `types.ts` is applied correctly.
+import './types';
+// Fix: Use named imports for react-router-dom to resolve module export errors and for consistency.
+import { Routes, Route, useLocation } from 'react-router-dom';
+import Header from './components/Header';
+import Footer from './components/Footer';
+import HomePage from './pages/HomePage';
+import AboutPage from './pages/AboutPage';
+import IndustryHubPage from './pages/IndustryHubPage';
+import IndustryDetailPage from './pages/IndustryDetailPage';
+import VacancyPage from './pages/VacancyPage';
+import ContactPage from './pages/ContactPage';
+import ScrollToTopButton from './components/ScrollToTopButton';
+import EntranceLoader from './components/EntranceLoader';
+import BackgroundAnimation from './components/BackgroundAnimation';
+import NewsPage from './pages/NewsPage';
+import NewsDetailPage from './pages/NewsDetailPage';
+import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
+import TermsAndConditionsPage from './pages/TermsAndConditionsPage';
+import ProcurementPage from './pages/ProcurementPage';
+import TendersPage from './pages/TendersPage';
+import SupplierRegistrationPage from './pages/SupplierRegistrationPage';
+import PresentationTemplatePage from './pages/PresentationTemplatePage';
+import AdminPage from './pages/admin/AdminPage';
+import LoginPage from './pages/admin/LoginPage';
+import { AuthProvider } from './components/auth/AuthProvider';
+import ProtectedRoute from './components/auth/ProtectedRoute';
+import { LanguageProvider } from './contexts/LanguageProvider';
+import { ThemeProvider } from './contexts/ThemeProvider';
+import { ToastProvider } from './components/ToastProvider';
+import ProductionPage from './pages/ProductionPage';
 
-const { sequelize } = require('./models');
 
-// Import routes
-const authRoutes = require('./routes/auth');
-const usersRoutes = require('./routes/users');
-const industriesRoutes = require('./routes/industries');
-const newsRoutes = require('./routes/news');
-const vacanciesRoutes = require('./routes/vacancies');
-const applicantsRoutes = require('./routes/applicants');
-const mediaRoutes = require('./routes/media');
-const statisticsRoutes = require('./routes/statistics');
-const contactRoutes = require('./routes/contacts');
-const securityRoutes = require('./routes/security');
-const milestonesRoutes = require('./routes/milestones');
-const tendersRoutes = require('./routes/tenders');
-const suppliersRoutes = require('./routes/suppliers');
-const settingsRoutes = require('./routes/settings');
+const ScrollToTop: React.FC = () => {
+  const { pathname } = useLocation();
 
-const app = express();
+  React.useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
 
-// Middleware
-app.use(cors());
-// Configure Helmet to allow cross-origin resources (images)
-app.use(helmet({
-  crossOriginResourcePolicy: { policy: "cross-origin" }
-}));
-app.use(morgan('dev'));
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+  return null;
+};
 
-// Serve static files for media uploads if using local storage
-app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
+const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [isLoading, setIsLoading] = React.useState(true);
 
-// API Routes
-app.get('/api/v1', (req, res) => {
-    res.json({ message: 'Welcome to the DEIG Admin API' });
-});
+  React.useEffect(() => {
+    const hasLoaded = sessionStorage.getItem('deig-session-loaded');
+    if (hasLoaded) {
+      setIsLoading(false);
+    }
+  }, []);
 
-app.use('/api/v1/auth', authRoutes);
-app.use('/api/v1/users', usersRoutes);
-app.use('/api/v1/industries', industriesRoutes);
-app.use('/api/v1/news', newsRoutes);
-app.use('/api/v1/vacancies', vacanciesRoutes);
-app.use('/api/v1/applicants', applicantsRoutes);
-app.use('/api/v1/media', mediaRoutes);
-app.use('/api/v1/statistics', statisticsRoutes);
-app.use('/api/v1/contacts', contactRoutes);
-app.use('/api/v1/security', securityRoutes);
-app.use('/api/v1/milestones', milestonesRoutes);
-app.use('/api/v1/tenders', tendersRoutes);
-app.use('/api/v1/suppliers', suppliersRoutes);
-app.use('/api/v1/settings', settingsRoutes);
+  const handleLoadingFinished = () => {
+    setIsLoading(false);
+    sessionStorage.setItem('deig-session-loaded', 'true');
+  };
 
-// Centralized Error Handler
-app.use((err, req, res, next) => {
-    console.error(err.stack);
-    res.status(500).json({ message: 'An internal server error occurred', error: err.message });
-});
+  return (
+    <div className="flex flex-col min-h-screen bg-gray-50 dark:bg-brand-blue-900">
+      {isLoading && <EntranceLoader onFinished={handleLoadingFinished} />}
+      <BackgroundAnimation />
+      <Header />
+      <ScrollToTop />
+      <main className="flex-grow">{children}</main>
+      <Footer />
+      <ScrollToTopButton />
+    </div>
+  );
+};
 
-module.exports = app;
+const App: React.FC = () => {
+  return (
+    <ThemeProvider>
+      <LanguageProvider>
+        <ToastProvider>
+          <AuthProvider>
+            <Routes>
+              <Route path="/login" element={<LoginPage />} />
+              <Route
+                path="/admin"
+                element={
+                  <ProtectedRoute>
+                    <div className="bg-brand-blue-50">
+                      <AdminPage />
+                    </div>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/*"
+                element={
+                  <MainLayout>
+                    <Routes>
+                      <Route path="/" element={<HomePage />} />
+                      <Route path="/about" element={<AboutPage />} />
+                      <Route path="/industry" element={<IndustryHubPage />} />
+                      <Route path="/industry/:id" element={<IndustryDetailPage />} />
+                      <Route path="/production" element={<ProductionPage />} />
+                      <Route path="/news" element={<NewsPage />} />
+                      <Route path="/news/:id" element={<NewsDetailPage />} />
+                      <Route path="/vacancy" element={<VacancyPage />} />
+                      <Route path="/contact" element={<ContactPage />} />
+                      <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
+                      <Route path="/terms" element={<TermsAndConditionsPage />} />
+                      <Route path="/procurement" element={<ProcurementPage />} />
+                      <Route path="/tenders" element={<TendersPage />} />
+                      <Route path="/supplier-registration" element={<SupplierRegistrationPage />} />
+                      <Route path="/presentation-template" element={<PresentationTemplatePage />} />
+                    </Routes>
+                  </MainLayout>
+                }
+              />
+            </Routes>
+          </AuthProvider>
+        </ToastProvider>
+      </LanguageProvider>
+    </ThemeProvider>
+  );
+};
 
-if (require.main === module) {
-  const PORT = process.env.PORT || 5000;
-  sequelize.sync().then(() => {
-    app.listen(PORT, '0.0.0.0', () => {
-      console.log(`DEIG Admin Backend running on port ${PORT}`);
-    });
-  }).catch((err) => {
-    console.error('Database sync warning:', err.message);
-    app.listen(PORT, '0.0.0.0', () => {
-      console.log(`DEIG Admin Backend running on port ${PORT}`);
-    });
-  });
-}
+export default App;
