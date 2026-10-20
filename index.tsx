@@ -1,5 +1,6 @@
 import React, { Suspense } from 'react';
 import ReactDOM from 'react-dom/client';
+import './index.css';
 import { ThemeProvider } from './contexts/ThemeContext';
 import Loader from './components/Loader';
 

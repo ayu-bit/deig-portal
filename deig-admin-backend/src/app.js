@@ -30,7 +30,8 @@ const app = express();
 app.use(cors());
 // Configure Helmet to allow cross-origin resources (images)
 app.use(helmet({
-  crossOriginResourcePolicy: { policy: "cross-origin" }
+  crossOriginResourcePolicy: { policy: "cross-origin" },
+  contentSecurityPolicy: false
 }));
 app.use(morgan('dev'));
 app.use(express.json());
