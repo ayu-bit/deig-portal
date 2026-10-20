@@ -1,61 +1,82 @@
+
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+const helmet = require('helmet');
 const morgan = require('morgan');
-const { connectDB } = require('./config/db');
-const errorMiddleware = require('./middleware/errorMiddleware');
+const path = require('path');
 
-// Initialize app
+const { sequelize } = require('./models');
+
+// Import routes
+const authRoutes = require('./routes/auth');
+const usersRoutes = require('./routes/users');
+const industriesRoutes = require('./routes/industries');
+const newsRoutes = require('./routes/news');
+const vacanciesRoutes = require('./routes/vacancies');
+const applicantsRoutes = require('./routes/applicants');
+const mediaRoutes = require('./routes/media');
+const statisticsRoutes = require('./routes/statistics');
+const contactRoutes = require('./routes/contacts');
+const securityRoutes = require('./routes/security');
+const milestonesRoutes = require('./routes/milestones');
+const tendersRoutes = require('./routes/tenders');
+const suppliersRoutes = require('./routes/suppliers');
+const settingsRoutes = require('./routes/settings');
+
 const app = express();
 
 // Middleware
-app.use((req, res, next) => {
-  console.log(`>>> [Backend App] ${req.method} ${req.url}`);
-  next();
-});
 app.use(cors());
+// Configure Helmet to allow cross-origin resources (images)
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: "cross-origin" }
+}));
+app.use(morgan('dev'));
 app.use(express.json());
-if (process.env.NODE_ENV === 'development') {
-  app.use(morgan('dev'));
-}
+app.use(express.urlencoded({ extended: true }));
 
-// Routes
-app.use('/auth', require('./routes/auth'));
-app.use('/users', require('./routes/users'));
-app.use('/roles', require('./routes/roles'));
-app.use('/industries', require('./routes/industries'));
-app.use('/news', require('./routes/news'));
-app.use('/vacancies', require('./routes/vacancies'));
-app.use('/applicants', require('./routes/applicants'));
-app.use('/pages', require('./routes/pages'));
-app.use('/settings', require('./routes/settings'));
-app.use('/suppliers', require('./routes/suppliers'));
-app.use('/tenders', require('./routes/tenders'));
-// app.use('/inquiries', require('./routes/inquiries'));
-// app.use('/security', require('./routes/security'));
-// app.use('/dashboard', require('./routes/dashboard'));
-// app.use('/media', require('./routes/media'));
+// Serve static files for media uploads if using local storage
+app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
-// Health check
-app.get('/health', (req, res) => {
-  res.json({ status: 'UP', service: 'deig-backend' });
+// API Routes
+app.get('/api/v1', (req, res) => {
+    res.json({ message: 'Welcome to the DEIG Admin API' });
 });
 
-// Error Handling
-app.use((req, res, next) => {
-  errorMiddleware.notFound(req, res, next);
-});
-app.use(errorMiddleware.errorHandler);
+app.use('/api/v1/auth', authRoutes);
+app.use('/api/v1/users', usersRoutes);
+app.use('/api/v1/industries', industriesRoutes);
+app.use('/api/v1/news', newsRoutes);
+app.use('/api/v1/vacancies', vacanciesRoutes);
+app.use('/api/v1/applicants', applicantsRoutes);
+app.use('/api/v1/media', mediaRoutes);
+app.use('/api/v1/statistics', statisticsRoutes);
+app.use('/api/v1/contacts', contactRoutes);
+app.use('/api/v1/security', securityRoutes);
+app.use('/api/v1/milestones', milestonesRoutes);
+app.use('/api/v1/tenders', tendersRoutes);
+app.use('/api/v1/suppliers', suppliersRoutes);
+app.use('/api/v1/settings', settingsRoutes);
 
-// Database connection (Mocked in our config/db.js)
-if (process.env.IS_PREVIEW_MODE !== 'true') {
-  connectDB();
-  const PORT = process.env.BACKEND_PORT || 5001;
-  app.listen(PORT, () => {
-    console.log(`Backend standalone server running on port ${PORT}`);
-  });
-} else {
-  // In preview mode, the main server calls connectDB
-  connectDB();
-}
+// Centralized Error Handler
+app.use((err, req, res, next) => {
+    console.error(err.stack);
+    res.status(500).json({ message: 'An internal server error occurred', error: err.message });
+});
 
 module.exports = app;
+
+if (require.main === module) {
+  const PORT = process.env.PORT || 5000;
+  sequelize.sync().then(() => {
+    app.listen(PORT, '0.0.0.0', () => {
+      console.log(`DEIG Admin Backend running on port ${PORT}`);
+    });
+  }).catch((err) => {
+    console.error('Database sync warning:', err.message);
+    app.listen(PORT, '0.0.0.0', () => {
+      console.log(`DEIG Admin Backend running on port ${PORT}`);
+    });
+  });
+}
