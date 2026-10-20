@@ -1,593 +1,519 @@
-
 import React, { useState, useEffect } from 'react';
-import '../types';
-import { useParams, Link, useNavigate } from 'react-router-dom';
-import { getIndustryById, getIndustries } from '../services/api';
-import type { Industry } from '../types';
-import { AnimatedSection } from '../components/AnimatedComponents';
-import Loader from '../components/Loader';
-import { useLanguage } from '../hooks/useLanguage';
-import { useToast } from '../contexts/ToastContext';
+import { CurrentView, Industry, NewsArticle } from '../types';
+import AnimatedSection from '../components/AnimatedSection';
+import Lightbox from '../components/Lightbox';
+import { useLanguage } from '../contexts/LanguageContext';
+import { fetchIndustryById, fetchNews } from '../services/apiService';
 
-// Workaround for custom element type checking for <model-viewer>
-const ModelViewer = 'model-viewer' as any;
+// Props
+interface IndustryDetailPageProps {
+  industryId: string;
+  setCurrentView: (view: CurrentView) => void;
+}
 
-// --- Utility Components ---
-
-const BlueprintGrid = () => (
-    <div className="absolute inset-0 pointer-events-none z-0" style={{ 
-        backgroundImage: 'linear-gradient(rgba(16, 117, 187, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(16, 117, 187, 0.05) 1px, transparent 1px)',
-        backgroundSize: '40px 40px'
-    }}></div>
-);
-
-const SectionTitle: React.FC<{ title: string; subtitle?: string; dark?: boolean }> = ({ title, subtitle, dark = false }) => (
-    <div className={`mb-12 border-l-4 ${dark ? 'border-white' : 'border-[#1075BB]'} pl-6`}>
-        <h2 className={`text-4xl font-black font-montserrat uppercase tracking-tight ${dark ? 'text-white' : 'text-[#1075BB]'}`}>
-            {title}
-        </h2>
-        {subtitle && <p className={`mt-2 text-lg font-roboto-condensed ${dark ? 'text-white/80' : 'text-gray-600'}`}>{subtitle}</p>}
-    </div>
-);
-
-const TechCard: React.FC<{ title: string; desc: string; index: number }> = ({ title, desc, index }) => (
-    <div className="group relative h-full bg-white dark:bg-[#1075BB] border border-gray-200 dark:border-white/20 p-8 transition-all duration-300 hover:border-[#1075BB] dark:hover:border-white hover:shadow-xl overflow-hidden">
-        {/* Technical Corners */}
-        <div className="absolute top-0 left-0 w-2 h-2 border-t-2 border-l-2 border-blue-200 group-hover:border-[#1075BB] dark:group-hover:border-white transition-colors"></div>
-        <div className="absolute top-0 right-0 w-2 h-2 border-t-2 border-r-2 border-blue-200 group-hover:border-[#1075BB] dark:group-hover:border-white transition-colors"></div>
-        <div className="absolute bottom-0 left-0 w-2 h-2 border-b-2 border-l-2 border-blue-200 group-hover:border-[#1075BB] dark:group-hover:border-white transition-colors"></div>
-        <div className="absolute bottom-0 right-0 w-2 h-2 border-b-2 border-r-2 border-blue-200 group-hover:border-[#1075BB] dark:group-hover:border-white transition-colors"></div>
-
-        <div className="flex items-baseline justify-between mb-4">
-            <span className="text-4xl font-black text-[#1075BB]/20 dark:text-white/20 group-hover:text-[#1075BB] dark:group-hover:text-white transition-colors">
-                {String(index + 1).padStart(2, '0')}
-            </span>
-            <div className="h-px flex-grow bg-blue-100 dark:bg-white/20 mx-4 group-hover:bg-[#1075BB] dark:group-hover:bg-white"></div>
+// Reusable components for this page
+const InfoCard: React.FC<{ title: string; icon: React.ReactNode }> = ({ title, icon }) => (
+    <div className="bg-surface dark:bg-surfaceDark p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-white/5 flex items-center space-x-4 hover:border-primary/30 transition-all duration-300 group">
+        <div className="w-10 h-10 bg-primary/5 text-primary rounded-xl flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-all duration-300 flex-shrink-0">
+            <div className="w-5 h-5">{icon}</div>
         </div>
-        
-        <h3 className="text-xl font-bold font-montserrat text-[#1075BB] dark:text-white mb-3 group-hover:translate-x-1 transition-transform">
-            {title}
-        </h3>
-        <p className="text-gray-600 dark:text-white/80 font-lato leading-relaxed">
-            {desc}
-        </p>
+        <p className="text-textDark dark:text-textLight font-semibold tracking-tight">{title}</p>
     </div>
 );
 
-const WorkflowStep: React.FC<{ number: string; title: string; desc: string }> = ({ number, title, desc }) => (
-    <div className="relative flex flex-col items-center text-center p-6">
-        <div className="w-16 h-16 rounded-full bg-[#0E62A1] border-2 border-white flex items-center justify-center text-xl font-bold text-white font-mono mb-4 z-10 shadow-lg">
-            {number}
-        </div>
-        <h4 className="text-lg font-bold text-white uppercase tracking-wider mb-2">{title}</h4>
-        <p className="text-sm text-white/70 font-lato max-w-xs">{desc}</p>
-        
-        {/* Connector Line (hidden on last item via CSS in parent) */}
-        <div className="hidden md:block absolute top-14 left-1/2 w-full h-0.5 bg-white/20 -z-0 step-connector"></div>
-    </div>
-);
-
-const ProductModal: React.FC<{ product: any; onClose: () => void }> = ({ product, onClose }) => {
-    if (!product) return null;
-    return (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in" onClick={onClose}>
-            <div className="bg-white dark:bg-[#1075BB] w-full max-w-5xl rounded-lg overflow-hidden shadow-2xl relative flex flex-col md:flex-row border border-white/20" onClick={e => e.stopPropagation()}>
-                <button onClick={onClose} className="absolute top-4 right-4 z-10 p-2 bg-black/50 hover:bg-red-600 rounded-full text-white transition-colors">
-                    <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-                </button>
-                
-                <div className="w-full md:w-1/2 bg-black relative min-h-[300px]">
-                    <img src={product.imageUrl} alt={product.name} className="w-full h-full object-cover opacity-90" />
-                    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-6">
-                        <span className="inline-block px-2 py-1 bg-[#1075BB] text-white text-[10px] font-bold uppercase tracking-widest mb-2">
-                            Deployment Ready
-                        </span>
-                    </div>
-                </div>
-                
-                <div className="w-full md:w-1/2 p-8 md:p-12 flex flex-col">
-                    <div className="mb-6">
-                        <h3 className="text-3xl font-black text-[#1075BB] dark:text-white font-montserrat uppercase">{product.name}</h3>
-                        <div className="h-1 w-20 bg-[#1075BB] dark:bg-white mt-2"></div>
-                    </div>
-                    
-                    <div className="flex-grow">
-                        <h4 className="text-sm font-bold text-gray-500 dark:text-white/70 uppercase tracking-wider mb-2">System Description</h4>
-                        <p className="text-gray-700 dark:text-white font-lato leading-relaxed mb-8">
-                            {product.description}
-                        </p>
-
-                        <h4 className="text-sm font-bold text-gray-500 dark:text-white/70 uppercase tracking-wider mb-2">Technical Specifications</h4>
-                        <div className="grid grid-cols-2 gap-4 mb-8">
-                            <div className="p-3 bg-gray-100 dark:bg-white/10 border-l-2 border-[#1075BB] dark:border-white">
-                                <span className="block text-[10px] text-gray-500 dark:text-white/60 uppercase">Operational Range</span>
-                                <span className="text-sm font-bold text-gray-900 dark:text-white">Classified</span>
-                            </div>
-                            <div className="p-3 bg-gray-100 dark:bg-white/10 border-l-2 border-[#1075BB] dark:border-white">
-                                <span className="block text-[10px] text-gray-500 dark:text-white/60 uppercase">Service Life</span>
-                                <span className="text-sm font-bold text-gray-900 dark:text-white">20+ Years</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <button className="w-full py-4 bg-[#1075BB] dark:bg-white hover:bg-[#0E62A1] dark:hover:bg-gray-100 text-white dark:text-[#1075BB] font-bold uppercase tracking-widest transition-colors flex items-center justify-center gap-2">
-                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
-                        Request Technical Datasheet
-                    </button>
-                </div>
+const ProjectCard: React.FC<{ title: string; description: string; image: string; status: string; }> = ({ title, description, image, status }) => (
+    <div className="group bg-surface dark:bg-surfaceDark rounded-3xl shadow-sm overflow-hidden h-full flex flex-col border border-gray-100 dark:border-white/5 hover:border-primary/30 transition-all duration-500 hover:-translate-y-2 hover:shadow-xl">
+        <div className="image-wrapper h-56 overflow-hidden relative">
+            <img src={image} alt={title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"/>
+            <div className="absolute inset-0 bg-primary/20 mix-blend-overlay opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+            <div className="absolute top-4 right-4 bg-primary/90 backdrop-blur-md text-white text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full">
+                {status}
             </div>
         </div>
-    );
-};
+        <div className="p-8 flex flex-col flex-grow">
+            <h4 className="text-xl font-bold text-textDark dark:text-textLight mb-3 font-display leading-tight group-hover:text-primary transition-colors">{title}</h4>
+            <p className="text-gray-500 dark:text-gray-400 text-sm leading-relaxed mb-6 flex-grow">{description}</p>
+            <div className="mt-auto pt-6 border-t border-gray-100 dark:border-white/5">
+                <span className="font-bold text-primary group-hover:translate-x-2 transition-transform inline-block cursor-pointer">
+                    View Details <span className="ml-2">&rarr;</span>
+                </span>
+            </div>
+        </div>
+    </div>
+);
 
-// --- Main Page Component ---
+const DownloadItem: React.FC<{ title: string; fileType: string; fileSize: string; }> = ({ title, fileType, fileSize }) => (
+    <a href="#" className="group bg-surface dark:bg-surfaceDark p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-white/5 flex items-center justify-between hover:border-primary/30 hover:shadow-md transition-all duration-300">
+        <div className="flex items-center space-x-5">
+            <div className="w-12 h-12 bg-primary/5 text-primary rounded-xl flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-all duration-300">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+            </div>
+            <div>
+                <p className="font-bold text-textDark dark:text-textLight group-hover:text-primary transition-colors">{title}</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 font-medium uppercase tracking-wider mt-1">{fileType} &bull; {fileSize}</p>
+            </div>
+        </div>
+        <div className="w-10 h-10 rounded-full border border-gray-100 dark:border-white/10 flex items-center justify-center text-gray-400 group-hover:text-primary group-hover:border-primary/30 transition-all duration-300">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+        </div>
+    </a>
+);
 
-const IndustryDetailPage: React.FC = () => {
-    const { id } = useParams<{ id: string }>();
-    const navigate = useNavigate();
+
+const IndustryDetailPage: React.FC<IndustryDetailPageProps> = ({ industryId, setCurrentView }) => {
     const [industry, setIndustry] = useState<Industry | null>(null);
-    const [relatedIndustries, setRelatedIndustries] = useState<Industry[]>([]);
+    const [news, setNews] = useState<NewsArticle[]>([]);
     const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
-    const [activeSection, setActiveSection] = useState('overview');
-    const [selectedProduct, setSelectedProduct] = useState<any>(null);
-    const { t } = useLanguage();
-    const { addToast } = useToast();
+    const [isLightboxOpen, setIsLightboxOpen] = useState(false);
+    const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+    const [animationDirection, setAnimationDirection] = useState<'next' | 'prev' | 'fade'>('fade');
+    const { language, t } = useLanguage();
 
     useEffect(() => {
-        if (id) {
-            const fetchIndustry = async () => {
-                try {
-                    setLoading(true);
-                    const data = await getIndustryById(id);
-                    setIndustry(data);
-                    
-                    // Fetch all industries to filter for related ones
-                    const allIndustries = await getIndustries();
-                    // Just filtering out the current one and taking first 3 for demo
-                    setRelatedIndustries(allIndustries.filter(ind => ind.id !== id).slice(0, 3));
-                    
-                    window.scrollTo(0, 0);
-                } catch (err) {
-                    setError('Failed to load industry data.');
-                } finally {
-                    setLoading(false);
-                }
-            };
-            fetchIndustry();
-        }
-    }, [id]);
-
-    // Scroll Spy Logic
-    useEffect(() => {
-        const handleScroll = () => {
-            const scrollPosition = window.scrollY + 150; // Offset for header
-            
-            const sections = ['overview', 'capabilities', 'products', 'innovation', 'leadership', 'contact'];
-            
-            for (const section of sections) {
-                const element = document.getElementById(section);
-                if (element) {
-                    const { offsetTop, offsetHeight } = element;
-                    if (scrollPosition >= offsetTop && scrollPosition < offsetTop + offsetHeight) {
-                        setActiveSection(section);
-                    }
-                }
+        const loadData = async () => {
+            setLoading(true);
+            try {
+                const [industryData, newsData] = await Promise.all([
+                    fetchIndustryById(industryId),
+                    fetchNews()
+                ]);
+                setIndustry(industryData);
+                setNews(newsData.filter(n => n.status === 'Published').slice(0, 3));
+            } catch (error) {
+                console.error("Failed to load industry details:", error);
+                setIndustry(null);
+            } finally {
+                setLoading(false);
             }
         };
 
-        window.addEventListener('scroll', handleScroll);
-        return () => window.removeEventListener('scroll', handleScroll);
-    }, []);
-
-    const scrollToSection = (sectionId: string) => {
-        const element = document.getElementById(sectionId);
-        if (element) {
-            const offset = 80; // Height of sticky nav
-            const elementPosition = element.getBoundingClientRect().top;
-            const offsetPosition = elementPosition + window.pageYOffset - offset;
-            
-            window.scrollTo({
-                top: offsetPosition,
-                behavior: "smooth"
-            });
-        }
+        loadData();
+    }, [industryId]);
+    
+    // Helper handlers
+    const handleBackClick = () => setCurrentView({ page: 'Industry' });
+    const openLightbox = (index: number) => {
+        setAnimationDirection('fade');
+        setSelectedImageIndex(index);
+        setIsLightboxOpen(true);
+    };
+    const closeLightbox = () => setIsLightboxOpen(false);
+    const goToNext = () => {
+        if (!industry?.facilityPhotos) return;
+        setAnimationDirection('next');
+        setSelectedImageIndex((prevIndex) => (prevIndex + 1) % industry.facilityPhotos.length);
+    };
+    const goToPrev = () => {
+        if (!industry?.facilityPhotos) return;
+        setAnimationDirection('prev');
+        setSelectedImageIndex((prevIndex) => (prevIndex - 1 + industry.facilityPhotos.length) % industry.facilityPhotos.length);
     };
 
-    const handleInquirySubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-        e.preventDefault();
-        addToast('Secure inquiry transmitted to division HQ.', 'success');
-        (e.target as HTMLFormElement).reset();
-    };
+    if (loading) {
+        return <div className="text-center py-40 text-textDark dark:text-textLight">Loading Industry Details...</div>;
+    }
 
-    if (loading) return <div className="flex justify-center items-center h-screen bg-[#1075BB]"><Loader /></div>;
-    if (error || !industry) return (
-        <div className="flex flex-col items-center justify-center h-screen bg-[#1075BB] text-white">
-            <h1 className="text-3xl font-black mb-4 font-montserrat">DIVISION NOT FOUND</h1>
-            <button onClick={() => navigate('/industry')} className="px-6 py-2 border border-white hover:bg-white hover:text-[#1075BB] rounded uppercase font-bold transition-all">Return to Hub</button>
-        </div>
-    );
-
-    const navItems = [
-        { id: 'overview', label: 'Overview' },
-        { id: 'capabilities', label: 'Capabilities' },
-        { id: 'products', label: 'Systems' },
-        { id: 'innovation', label: 'R&D' },
-        { id: 'leadership', label: 'Command' },
-        { id: 'contact', label: 'Contact' },
-    ];
+    if (!industry) {
+        return (
+            <div className="text-center py-20">
+                <h2 className="text-2xl text-textDark dark:text-textLight">Industry not found.</h2>
+                <button onClick={handleBackClick} className="mt-4 bg-primaryDark text-white font-bold py-2 px-6 rounded-lg hover:opacity-90 transition-colors duration-300 btn-glow">
+                    {t('detail_back_to_industries')}
+                </button>
+            </div>
+        );
+    }
+    
+    const hasPhotos = industry.facilityPhotos && industry.facilityPhotos.length > 0;
 
     return (
-        <div className="bg-gray-50 dark:bg-gray-900 min-h-screen text-gray-800 dark:text-gray-100 font-lato overflow-x-hidden">
-            
-            {/* 1. CINEMATIC HERO SECTION */}
-            <header className="relative h-screen min-h-[600px] w-full overflow-hidden flex flex-col justify-end pb-20 z-10 bg-[#1075BB]">
-                <div className="absolute inset-0 z-0">
-                    {industry.video ? (
-                        <video autoPlay loop muted playsInline className="w-full h-full object-cover opacity-60">
-                            <source src={industry.video} type="video/mp4" />
-                        </video>
-                    ) : (
-                        <img src={industry.gallery[0]} alt={industry.name} className="w-full h-full object-cover opacity-50" />
-                    )}
-                    
-                    {/* Overlays */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#1075BB] via-transparent to-black/40"></div>
-                    <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-20 mix-blend-overlay"></div>
-                    
-                    {/* Animated Grid Overlay */}
-                    <div className="absolute inset-0 blueprint-overlay opacity-30"></div>
+        <div className="bg-lightBg dark:bg-surfaceDark/50">
+            {/* 1. Hero Section */}
+            <section className="relative h-[70vh] flex items-center justify-center text-center text-white overflow-hidden">
+                <div className="absolute inset-0">
+                    <img src={industry.heroImage} alt={industry.fullName[language]} className="w-full h-full object-cover scale-105 animate-slow-zoom" />
+                    <div className="absolute inset-0 bg-surfaceDark/80"></div>
+                    <div className="absolute inset-0 bg-gradient-to-t from-surfaceDark via-surfaceDark/40 to-transparent"></div>
+                    <div className="absolute inset-0 bg-primary/10 mix-blend-overlay"></div>
+                </div>
+                
+                <div className="absolute top-0 left-0 w-full h-full opacity-10 pointer-events-none">
+                    <div className="absolute inset-0 animated-grid"></div>
                 </div>
 
-                <div className="container mx-auto px-6 relative z-10">
+                <div className="relative z-20 container mx-auto px-6 max-w-5xl">
                     <AnimatedSection>
-                        <div className="flex flex-col gap-4">
-                            <div className="flex items-center gap-3">
-                                <div className="h-px w-12 bg-white"></div>
-                                <span className="text-white font-bold uppercase tracking-[0.3em] text-xs font-roboto-condensed">Strategic Division</span>
+                        <div className="inline-block px-4 py-1.5 bg-primary/20 backdrop-blur-md border border-primary/30 rounded-full text-primary text-xs font-bold uppercase tracking-[0.2em] mb-8">
+                            {industry.shortName} Division
+                        </div>
+                        <h1 className="text-5xl md:text-7xl font-bold font-display tracking-tight mb-8 leading-[1.1]">
+                            {industry.fullName[language]}
+                        </h1>
+                        <p className="text-xl md:text-2xl text-gray-300 max-w-3xl mx-auto leading-relaxed font-light">
+                            Pioneering advancements in {industry.shortName} to strengthen national defense through innovation and engineering excellence.
+                        </p>
+                        <div className="mt-12 flex flex-col sm:flex-row gap-6 justify-center">
+                            <a href="#about" className="group bg-primary text-white font-bold py-4 px-10 rounded-full hover:bg-primary/90 transition-all duration-300 shadow-lg shadow-primary/25 flex items-center justify-center">
+                                Explore Division
+                                <svg className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+                            </a>
+                            <a href="#contact" className="bg-white/10 backdrop-blur-md border border-white/20 text-white font-bold py-4 px-10 rounded-full hover:bg-white hover:text-surfaceDark transition-all duration-300 flex items-center justify-center">
+                                Get in Touch
+                            </a>
+                        </div>
+                    </AnimatedSection>
+                </div>
+            </section>
+
+            {/* Sticky Nav Bar */}
+            <div className="sticky top-20 z-30 bg-surfaceDark/95 backdrop-blur-md border-b border-white/5 shadow-2xl">
+                <div className="container mx-auto px-6">
+                    <div className="flex justify-between items-center">
+                        <button onClick={handleBackClick} className="text-primary hover:text-white transition-colors duration-300 flex items-center space-x-2 text-sm font-bold py-4 group">
+                            <svg className="h-5 w-5 group-hover:-translate-x-1 transition-transform" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
+                            <span className="hidden sm:inline">Back to Industries</span>
+                        </button>
+                        <div className="flex space-x-1 overflow-x-auto no-scrollbar py-2">
+                            {['About', 'Capabilities', 'Products', 'Technology', 'Facilities', 'News', 'Contact'].map(item => (
+                                <a key={item} href={`#${item.toLowerCase()}`} className="text-gray-400 hover:text-white hover:bg-white/5 transition-all duration-200 py-2 px-4 rounded-full text-xs font-bold uppercase tracking-widest flex-shrink-0">{item}</a>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* 2. About the Industry */}
+            <section id="about" className="py-32 bg-surface dark:bg-surfaceDark scroll-mt-20 relative overflow-hidden">
+                <div className="container mx-auto px-6">
+                    <AnimatedSection>
+                        <div className="max-w-4xl mx-auto text-center mb-20">
+                            <h2 className="text-4xl md:text-5xl font-bold text-textDark dark:text-textLight mb-6 font-display">About {industry.shortName}</h2>
+                            <div className="w-24 h-1.5 bg-primary mx-auto rounded-full"></div>
+                        </div>
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+                            <div className="space-y-8">
+                                <p className="text-xl text-textDark/80 dark:text-textLight/80 leading-relaxed font-light">
+                                    {industry.description[language]}
+                                </p>
+                                <p className="text-lg text-gray-500 dark:text-gray-400 leading-relaxed">
+                                    As a core division of DEIG, our mandate is to develop and maintain sovereign capabilities in this critical sector, ensuring our nation's forces are equipped with reliable, state-of-the-art technology.
+                                </p>
+                                <div className="pt-8 flex items-center space-x-6">
+                                    <div className="flex -space-x-4">
+                                        {[1,2,3,4].map(i => (
+                                            <div key={i} className="w-12 h-12 rounded-full border-4 border-surface dark:border-surfaceDark bg-gray-200 overflow-hidden">
+                                                <img src={`https://picsum.photos/seed/expert${i}/100/100`} alt="Expert" className="w-full h-full object-cover" />
+                                            </div>
+                                        ))}
+                                    </div>
+                                    <div className="text-sm">
+                                        <p className="font-bold text-textDark dark:text-textLight">500+ Experts</p>
+                                        <p className="text-gray-500">Dedicated to this division</p>
+                                    </div>
+                                </div>
                             </div>
-                            
-                            <h1 className="text-6xl md:text-8xl font-black text-white font-montserrat tracking-tighter leading-none mb-2">
-                                {industry.acronym}
-                            </h1>
-                            <h2 className="text-xl md:text-3xl text-white/90 font-light font-roboto-condensed max-w-3xl border-l-4 border-white/20 pl-6">
-                                {t(`industries.${industry.id}.name`, industry.name)}
-                            </h2>
-                            
-                            {/* Hero Stats */}
-                            <div className="mt-12 flex flex-wrap gap-8 border-t border-white/10 pt-8">
-                                <div>
-                                    <span className="block text-xs text-white/70 uppercase tracking-widest mb-1">HQ Location</span>
-                                    <span className="block text-lg font-bold text-white font-mono">{industry.facilityInfo?.location.split(',')[0]}</span>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                                <div className="bg-primary/5 p-8 rounded-3xl border border-primary/10 hover:bg-primary/10 transition-colors">
+                                    <div className="w-12 h-12 bg-primary text-white rounded-2xl flex items-center justify-center mb-6 shadow-lg shadow-primary/20">
+                                        <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                                    </div>
+                                    <h4 className="font-bold text-textDark dark:text-textLight text-xl mb-3 font-display">Our Mission</h4>
+                                    <p className="text-gray-500 dark:text-gray-400 text-sm leading-relaxed">To deliver superior engineering solutions that enhance national security and foster technological self-reliance.</p>
                                 </div>
-                                <div>
-                                    <span className="block text-xs text-white/70 uppercase tracking-widest mb-1">Facility Size</span>
-                                    <span className="block text-lg font-bold text-white font-mono">{industry.facilityInfo?.area}</span>
-                                </div>
-                                <div>
-                                    <span className="block text-xs text-white/70 uppercase tracking-widest mb-1">Status</span>
-                                    <span className="flex items-center text-lg font-bold text-white font-mono gap-2">
-                                        <span className="w-2 h-2 bg-white rounded-full animate-pulse"></span> Active
-                                    </span>
+                                <div className="bg-surfaceDark p-8 rounded-3xl border border-white/5 hover:bg-surfaceDark/80 transition-colors text-white">
+                                    <div className="w-12 h-12 bg-white/10 text-white rounded-2xl flex items-center justify-center mb-6 border border-white/20">
+                                        <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                                    </div>
+                                    <h4 className="font-bold text-xl mb-3 font-display">Our Vision</h4>
+                                    <p className="text-gray-300 text-sm leading-relaxed">To be a globally recognized center of excellence in defense engineering and innovation.</p>
                                 </div>
                             </div>
                         </div>
                     </AnimatedSection>
                 </div>
-            </header>
-
-            {/* 2. STICKY COMMAND BAR */}
-            <div className="sticky top-[72px] z-40 bg-white/95 dark:bg-[#1075BB]/95 backdrop-blur-md border-b border-gray-200 dark:border-white/10 shadow-md">
+            </section>
+            
+            {/* 3. Core Capabilities */}
+            <section id="capabilities" className="py-32 bg-lightBg dark:bg-surfaceDark/50 scroll-mt-20">
                 <div className="container mx-auto px-6">
-                    <div className="flex items-center justify-between">
-                        <div className="hidden md:block font-black text-xl text-[#1075BB] dark:text-white font-montserrat">{industry.acronym}</div>
-                        <div className="flex gap-1 overflow-x-auto w-full md:w-auto">
-                            {navItems.map(item => (
-                                <button
-                                    key={item.id}
-                                    onClick={() => scrollToSection(item.id)}
-                                    className={`px-6 py-4 text-sm font-bold uppercase tracking-wider transition-all border-b-4 ${
-                                        activeSection === item.id 
-                                        ? 'border-[#1075BB] dark:border-white text-[#1075BB] dark:text-white bg-gray-50 dark:bg-white/10' 
-                                        : 'border-transparent text-gray-500 dark:text-white/60 hover:text-[#1075BB] dark:hover:text-white'
-                                    }`}
-                                >
-                                    {item.label}
-                                </button>
-                            ))}
+                    <AnimatedSection>
+                        <div className="max-w-4xl mx-auto text-center mb-20">
+                            <h2 className="text-4xl md:text-5xl font-bold text-textDark dark:text-textLight mb-6 font-display">Core Capabilities</h2>
+                            <div className="w-24 h-1.5 bg-primary mx-auto rounded-full"></div>
                         </div>
-                        <Link to="/contact" className="hidden lg:flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-[#1075BB] dark:text-white hover:underline transition-colors">
-                            <span className="w-2 h-2 bg-current rounded-full"></span> Secure Comms
-                        </Link>
-                    </div>
-                </div>
-            </div>
-
-            {/* 3. CONTENT SECTIONS */}
-            <main className="relative">
-                <BlueprintGrid />
-
-                {/* OVERVIEW */}
-                <section id="overview" className="py-24 relative">
-                    <div className="container mx-auto px-6">
-                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-start">
-                            <AnimatedSection>
-                                <SectionTitle title="Strategic Mandate" subtitle="Operational Scope & Mission" />
-                                <p className="text-xl text-gray-700 dark:text-white/90 leading-relaxed font-lato mb-8 text-justify">
-                                    {t(`industries.${industry.id}.description`, industry.description)}
-                                </p>
-                                
-                                <div className="bg-[#1075BB] text-white p-8 rounded-none border-l-4 border-white shadow-2xl relative overflow-hidden">
-                                    <div className="absolute right-0 top-0 opacity-10 transform translate-x-1/3 -translate-y-1/3">
-                                        <svg width="200" height="200" viewBox="0 0 200 200" fill="white"><path d="M100 0L200 100L100 200L0 100L100 0Z" /></svg>
-                                    </div>
-                                    <h4 className="text-white/70 font-bold uppercase text-xs tracking-widest mb-4">Core Focus</h4>
-                                    <p className="text-xl font-montserrat font-bold italic relative z-10">
-                                        "{t(`industries.${industry.id}.focus`, industry.focus)}"
-                                    </p>
-                                </div>
-                            </AnimatedSection>
-                            
-                            <AnimatedSection delay={200}>
-                                <div className="relative group">
-                                    {/* Tech Border */}
-                                    <div className="absolute -inset-2 border-2 border-blue-100 dark:border-white/20 z-0"></div>
-                                    <div className="absolute -inset-2 border-2 border-[#1075BB] z-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 transform scale-105"></div>
-                                    
-                                    <div className="relative h-[500px] overflow-hidden bg-[#1075BB] z-10">
-                                        <img src={industry.gallery[1] || industry.gallery[0]} alt="Facility" className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110 opacity-90 group-hover:opacity-100" />
-                                        <div className="absolute inset-0 bg-[#1075BB]/20 group-hover:bg-transparent transition-colors duration-500"></div>
-                                        
-                                        {/* Overlay Stats */}
-                                        <div className="absolute bottom-0 left-0 right-0 bg-black/80 backdrop-blur-md p-6 border-t border-white/20">
-                                            <div className="grid grid-cols-2 gap-4">
-                                                <div>
-                                                    <div className="text-xs text-white/70 uppercase">Establishment</div>
-                                                    <div className="text-white font-mono">2010</div>
-                                                </div>
-                                                <div>
-                                                    <div className="text-xs text-white/70 uppercase">Workforce</div>
-                                                    <div className="text-white font-mono">1,200+</div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </AnimatedSection>
-                        </div>
-                    </div>
-                </section>
-
-                {/* WORKFLOW (New Section) */}
-                <section className="py-20 bg-[#1075BB] border-t border-white/10">
-                    <div className="container mx-auto px-6">
-                        <AnimatedSection>
-                            <h3 className="text-2xl font-bold text-white text-center mb-12 uppercase tracking-widest font-roboto-condensed">Operational Workflow</h3>
-                            <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-                                <WorkflowStep number="01" title="R&D Phase" desc="Concept design and simulation testing in virtual environments." />
-                                <WorkflowStep number="02" title="Prototyping" desc="Rapid fabrication of initial units for stress testing." />
-                                <WorkflowStep number="03" title="Production" desc="Mass manufacturing using automated CNC and assembly lines." />
-                                <WorkflowStep number="04" title="QA & Delivery" desc="Rigorous ballistics testing and final deployment logistics." />
-                            </div>
-                        </AnimatedSection>
-                    </div>
-                </section>
-
-                {/* CAPABILITIES */}
-                <section id="capabilities" className="py-24 bg-gray-50 dark:bg-gray-800 relative border-y border-gray-200 dark:border-white/10">
-                    <div className="container mx-auto px-6 relative z-10">
-                        <AnimatedSection>
-                            <div className="max-w-4xl mb-16">
-                                <SectionTitle title="Engineering Capabilities" subtitle="Specialized Competencies & Infrastructure" />
-                            </div>
-                        </AnimatedSection>
-                        
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                            {industry.capabilities.map((cap, idx) => (
-                                <AnimatedSection key={idx} delay={idx * 100}>
-                                    <TechCard title={cap.name} desc={cap.description} index={idx} />
-                                </AnimatedSection>
-                            ))}
-                        </div>
-                    </div>
-                </section>
-
-                {/* PRODUCTS */}
-                <section id="products" className="py-24 bg-white dark:bg-[#1075BB] relative">
-                    <div className="container mx-auto px-6">
-                        <AnimatedSection>
-                            <SectionTitle title="Systems Portfolio" subtitle="Deployed Assets & Solutions" dark={true} />
-                        </AnimatedSection>
-
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                            {industry.products.map((product, idx) => (
-                                <AnimatedSection key={idx} delay={idx * 100}>
-                                    <div 
-                                        className="group bg-gray-100 dark:bg-[#0E62A1] rounded-sm overflow-hidden border border-gray-200 dark:border-white/10 hover:border-[#1075BB] dark:hover:border-white transition-all cursor-pointer relative"
-                                        onClick={() => setSelectedProduct(product)}
-                                    >
-                                        <div className="h-64 relative overflow-hidden">
-                                            <img src={product.imageUrl} alt={product.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 filter grayscale group-hover:grayscale-0" />
-                                            <div className="absolute inset-0 bg-[#1075BB]/20 group-hover:bg-transparent transition-colors"></div>
-                                            
-                                            {/* Hover Reveal Overlay */}
-                                            <div className="absolute inset-0 bg-[#1075BB]/90 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                                                <span className="text-white font-bold uppercase tracking-widest border-2 border-white px-6 py-2">
-                                                    Access Data
-                                                </span>
-                                            </div>
-                                        </div>
-                                        <div className="p-6 relative">
-                                            {/* Decorative Corner */}
-                                            <div className="absolute top-0 right-0 w-0 h-0 border-t-[20px] border-t-[#1075BB] dark:border-t-white border-l-[20px] border-l-transparent"></div>
-                                            
-                                            <h3 className="text-xl font-bold text-gray-900 dark:text-white font-montserrat mb-2">{product.name}</h3>
-                                            <p className="text-sm text-gray-600 dark:text-white/80 line-clamp-2">{product.description}</p>
-                                        </div>
+                            {industry.capabilities[language].map((cap, i) => <InfoCard key={i} title={cap} icon={<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>} />)}
+                        </div>
+                    </AnimatedSection>
+                </div>
+            </section>
+            
+            {/* 4. Products & Solutions */}
+            <section id="products" className="py-32 bg-surface dark:bg-surfaceDark scroll-mt-20">
+                <div className="container mx-auto px-6">
+                    <AnimatedSection>
+                        <div className="max-w-4xl mx-auto text-center mb-20">
+                            <h2 className="text-4xl md:text-5xl font-bold text-textDark dark:text-textLight mb-6 font-display">Products & Solutions</h2>
+                            <div className="w-24 h-1.5 bg-primary mx-auto rounded-full"></div>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                            {industry.productsOrServices[language].map((prod, i) => <InfoCard key={i} title={prod} icon={<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25a2.25 2.25 0 01-2.25-2.25v-2.25z" /></svg>} />)}
+                        </div>
+                    </AnimatedSection>
+                </div>
+            </section>
+
+            {/* 5. Technology & Innovation */}
+            {industry.technicalHighlights[language].length > 0 && (
+            <section id="technology" className="py-32 bg-lightBg dark:bg-surfaceDark/50 scroll-mt-20">
+                <div className="container mx-auto px-6">
+                    <AnimatedSection>
+                        <div className="max-w-4xl mx-auto text-center mb-20">
+                            <h2 className="text-4xl md:text-5xl font-bold text-textDark dark:text-textLight mb-6 font-display">Technology & Innovation</h2>
+                            <div className="w-24 h-1.5 bg-primary mx-auto rounded-full"></div>
+                        </div>
+                        <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-10">
+                            {industry.technicalHighlights[language].map((highlight, i) => (
+                                <div key={i} className="flex items-start space-x-6 group">
+                                    <div className="w-14 h-14 bg-primary/5 text-primary rounded-2xl flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-all duration-300 flex-shrink-0">
+                                        <svg className="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9.75 3.104v5.714a2.25 2.25 0 01-.659 1.591L5 14.5M9.75 3.104c.239.05.48.09.72.128a25.043 25.043 0 011.5 0c.24-.038.481-.078.72-.128M15 14.5l-2.25-2.25a2.25 2.25 0 00-.659-1.591V3.104m6.15 3.693c.24-.038.48-.077.72-.128a25.029 25.029 0 00-3.14 0c.24.05.48.09.72.128a25.043 25.043 0 011.5 0" /><path strokeLinecap="round" strokeLinejoin="round" d="M3 14.25V19.5a2.25 2.25 0 002.25 2.25h13.5A2.25 2.25 0 0021 19.5v-5.25m-18 0l2.25-2.25a2.25 2.25 0 011.591-.659h9.918a2.25 2.25 0 011.591.659L21 14.25" /></svg>
                                     </div>
-                                </AnimatedSection>
+                                    <span className="text-textDark/90 dark:text-textLight/90 text-lg leading-relaxed pt-2">{highlight}</span>
+                                </div>
                             ))}
                         </div>
-                    </div>
-                    {selectedProduct && <ProductModal product={selectedProduct} onClose={() => setSelectedProduct(null)} />}
-                </section>
+                    </AnimatedSection>
+                </div>
+            </section>
+            )}
 
-                {/* INNOVATION & R&D */}
-                <section id="innovation" className="py-24 bg-gray-900 relative text-white overflow-hidden">
-                    {/* Background Tech Elements */}
-                    <div className="absolute top-0 right-0 w-1/2 h-full bg-[#1075BB]/20 transform skew-x-12 translate-x-20"></div>
-                    
-                    <div className="container mx-auto px-6 relative z-10">
-                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-16">
-                            <div className="lg:col-span-1 space-y-10">
-                                <AnimatedSection>
-                                    <h2 className="text-4xl font-black font-montserrat text-[#1075BB] mb-6">FUTURE SYSTEMS LAB</h2>
-                                    <p className="text-gray-400 text-lg leading-relaxed">
-                                        Pioneering the next generation of defense technologies through advanced research in materials, AI, and autonomous systems.
-                                    </p>
-                                </AnimatedSection>
-
-                                <div className="space-y-6">
-                                    {industry.technicalHighlights.map((tech, idx) => (
-                                        <AnimatedSection key={idx} delay={idx * 150}>
-                                            <div className="border-l-2 border-[#1075BB] pl-6 py-2 hover:border-white transition-colors">
-                                                <h4 className="text-lg font-bold font-roboto-condensed text-white mb-1">{tech.title}</h4>
-                                                <p className="text-sm text-gray-500">{tech.description}</p>
-                                            </div>
-                                        </AnimatedSection>
-                                    ))}
-                                </div>
-                            </div>
-
-                            <div className="lg:col-span-2">
-                                <AnimatedSection delay={300}>
-                                    <div className="bg-[#1075BB]/50 rounded-xl border border-[#1075BB] p-1 relative shadow-2xl backdrop-blur-sm">
-                                        {/* Viewer Header */}
-                                        <div className="absolute top-4 left-4 z-10 flex items-center gap-4">
-                                            <span className="text-white text-xs font-mono px-2 py-1 border border-white/30 bg-black/60 rounded">LIVE PREVIEW</span>
-                                            <span className="text-[#1075BB] text-xs font-mono animate-pulse bg-white px-2 py-0.5 rounded">Connection Stable</span>
-                                        </div>
-
-                                        <div className="h-[600px] w-full bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-[#1075BB] to-black rounded-lg relative overflow-hidden">
-                                            <div className="absolute inset-0 blueprint-overlay opacity-20"></div>
-                                            <ModelViewer
-                                                src={industry.model3d || 'https://modelviewer.dev/shared-assets/models/Astronaut.glb'}
-                                                alt="3D Model"
-                                                auto-rotate
-                                                camera-controls
-                                                className="w-full h-full relative z-10"
-                                                shadow-intensity="1"
-                                                style={{ backgroundColor: 'transparent' }}
-                                            />
-                                        </div>
-                                        
-                                        {/* Viewer Footer */}
-                                        <div className="absolute bottom-4 left-0 right-0 text-center pointer-events-none">
-                                            <span className="text-[10px] text-white uppercase tracking-[0.3em]">Interactive 3D Model Visualization</span>
-                                        </div>
-                                    </div>
-                                </AnimatedSection>
-                            </div>
+            {/* 6. Quality & Compliance */}
+            <section id="quality" className="py-32 bg-surface dark:bg-surfaceDark scroll-mt-20">
+                <div className="container mx-auto px-6">
+                    <AnimatedSection>
+                        <div className="max-w-4xl mx-auto text-center mb-20">
+                            <h2 className="text-4xl md:text-5xl font-bold text-textDark dark:text-textLight mb-6 font-display">Quality & Compliance</h2>
+                            <div className="w-24 h-1.5 bg-primary mx-auto rounded-full"></div>
                         </div>
-                    </div>
-                </section>
-
-                {/* LEADERSHIP (New Section) */}
-                <section id="leadership" className="py-24 bg-gray-50 dark:bg-[#1075BB] border-t border-gray-200 dark:border-white/10">
-                    <div className="container mx-auto px-6">
-                        <AnimatedSection>
-                            <SectionTitle title="Command Structure" subtitle="Divisional Leadership & Management" dark={true} />
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                                <div className="bg-white dark:bg-[#0E62A1] border border-gray-200 dark:border-white/10 p-6 flex items-center gap-6 shadow-lg">
-                                    <div className="w-24 h-24 bg-gray-200 dark:bg-white/10 rounded-full flex-shrink-0 overflow-hidden">
-                                        <img src="https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?auto=compress&cs=tinysrgb&w=150" alt={industry.contactPerson} className="w-full h-full object-cover" />
-                                    </div>
-                                    <div>
-                                        <h4 className="text-xl font-bold text-gray-900 dark:text-white font-montserrat">{industry.contactPerson}</h4>
-                                        <p className="text-[#1075BB] dark:text-white/80 font-bold text-xs uppercase tracking-wider mb-2">Director General</p>
-                                        <p className="text-gray-500 dark:text-white/60 text-sm">Strategic operations oversight.</p>
-                                    </div>
+                        <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-10">
+                            <div className="bg-primary/5 p-10 rounded-3xl border border-primary/10 flex items-center space-x-8 group hover:bg-primary/10 transition-all duration-300">
+                                <div className="w-20 h-20 bg-primary text-white rounded-2xl flex items-center justify-center shadow-lg shadow-primary/20 flex-shrink-0 group-hover:scale-110 transition-transform">
+                                    <svg className="w-10 h-10" fill="currentColor" viewBox="0 0 24 24"><path d="M21 2H3v20h18V2zM11 18H7v-2h4v2zm4 0h-2v-2h2v2zm0-4h-6v-2h6v2zm0-4H7V8h8v2z"/></svg>
                                 </div>
-                                {/* Placeholder Officers */}
-                                <div className="bg-white dark:bg-[#0E62A1] border border-gray-200 dark:border-white/10 p-6 flex items-center gap-6 shadow-lg opacity-80">
-                                    <div className="w-24 h-24 bg-gray-200 dark:bg-white/10 rounded-full flex-shrink-0 flex items-center justify-center text-2xl font-bold text-gray-500 dark:text-white">
-                                        ?
-                                    </div>
-                                    <div>
-                                        <h4 className="text-xl font-bold text-gray-900 dark:text-white font-montserrat">Head of R&D</h4>
-                                        <p className="text-[#1075BB] dark:text-white/80 font-bold text-xs uppercase tracking-wider mb-2">Chief Engineer</p>
-                                        <p className="text-gray-500 dark:text-white/60 text-sm">Innovation and development lead.</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </AnimatedSection>
-                    </div>
-                </section>
-
-                {/* CONTACT FOOTER */}
-                <section id="contact" className="py-24 bg-[#1075BB] border-t border-white/10">
-                    <div className="container mx-auto px-6">
-                        <AnimatedSection>
-                            <div className="bg-[#0E62A1] rounded-lg p-12 flex flex-col md:flex-row justify-between items-center gap-8 shadow-2xl border border-white/10">
                                 <div>
-                                    <h3 className="text-3xl font-black text-white font-montserrat mb-2">Initiate Secure Channel</h3>
-                                    <p className="text-white/80">Direct communication line to {industry.acronym} operational command.</p>
-                                    
-                                    <div className="mt-8 flex flex-col sm:flex-row gap-8">
-                                        <div className="flex items-center gap-4">
-                                            <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center text-[#1075BB]">
-                                                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" /></svg>
-                                            </div>
-                                            <div>
-                                                <div className="text-xs text-white/70 uppercase font-bold">Secure Line</div>
-                                                <div className="text-white font-mono text-lg">{industry.contact.phone}</div>
-                                            </div>
-                                        </div>
-                                        <div className="flex items-center gap-4">
-                                            <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center text-[#1075BB]">
-                                                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
-                                            </div>
-                                            <div>
-                                                <div className="text-xs text-white/70 uppercase font-bold">Official Email</div>
-                                                <div className="text-white font-mono text-lg">{industry.contact.email}</div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div className="w-full md:w-auto">
-                                    <form onSubmit={handleInquirySubmit} className="flex flex-col gap-4 w-full md:w-96">
-                                        <input type="text" placeholder="Subject / Clearance Code" className="bg-[#1075BB] border border-white/20 text-white px-4 py-3 rounded focus:outline-none focus:border-white placeholder-white/50" required />
-                                        <button type="submit" className="bg-white hover:bg-gray-100 text-[#1075BB] font-bold py-4 px-8 rounded shadow-lg transition-all uppercase tracking-widest text-sm">
-                                            Transmit Inquiry
-                                        </button>
-                                    </form>
+                                    <h4 className="font-bold text-textDark dark:text-textLight text-2xl mb-2 font-display">ISO 9001:2015</h4>
+                                    <p className="text-gray-500 dark:text-gray-400 leading-relaxed">{t('cert_iso_text')}</p>
                                 </div>
                             </div>
-                        </AnimatedSection>
-                    </div>
-                </section>
-
-                {/* RELATED INDUSTRIES (New Section) */}
-                <section className="py-20 bg-[#1075BB] border-t border-white/10">
-                    <div className="container mx-auto px-6">
-                        <h3 className="text-xl font-bold text-white mb-8 font-roboto-condensed uppercase tracking-wider">Related Strategic Divisions</h3>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                            {relatedIndustries.map(ind => (
-                                <Link key={ind.id} to={`/industry/${ind.id}`} className="group block bg-[#0E62A1] border border-white/10 hover:bg-white hover:text-[#1075BB] p-6 rounded-lg transition-all">
-                                    <div className="flex justify-between items-start mb-4">
-                                        <h4 className="text-2xl font-black text-white group-hover:text-[#1075BB] font-montserrat">{ind.acronym}</h4>
-                                        <span className="text-[#1075BB] opacity-0 group-hover:opacity-100 transition-opacity">
-                                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
-                                        </span>
+                            <div className="bg-surfaceDark p-10 rounded-3xl border border-white/5 flex items-center space-x-8 group hover:bg-surfaceDark/80 transition-all duration-300 text-white">
+                                <div className="w-20 h-20 bg-white/10 text-white rounded-2xl flex items-center justify-center border border-white/20 flex-shrink-0 group-hover:scale-110 transition-transform">
+                                    <svg className="w-10 h-10" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2L1 9l4 2.18v6.32L12 22l7-4.5V11.18L23 9l-11-7zm0 2.37L19.5 9 12 12.5 4.5 9 12 4.37zM6 12.05l6 3.45 6-3.45v3.45l-6 3.45-6-3.45v-3.45z"/></svg>
+                                </div>
+                                <div>
+                                    <h4 className="font-bold text-2xl mb-2 font-display">AS9100</h4>
+                                    <p className="text-gray-300 leading-relaxed">{t('cert_as9100_text')}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </AnimatedSection>
+                </div>
+            </section>
+            
+            {/* 7. Production Facilities */}
+            {hasPhotos && (
+            <section id="facilities" className="py-32 bg-lightBg dark:bg-surfaceDark/50 scroll-mt-20">
+                <div className="container mx-auto px-6">
+                    <AnimatedSection>
+                        <div className="max-w-4xl mx-auto text-center mb-20">
+                            <h2 className="text-4xl md:text-5xl font-bold text-textDark dark:text-textLight mb-6 font-display">Production Facilities</h2>
+                            <div className="w-24 h-1.5 bg-primary mx-auto rounded-full"></div>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10">
+                            {industry.facilityPhotos.slice(0,3).map((imgSrc, i) => (
+                                <div key={i} onClick={() => openLightbox(i)} className="group relative overflow-hidden rounded-3xl shadow-lg cursor-pointer aspect-video">
+                                    <img src={imgSrc} alt={`${industry.shortName} gallery image ${i + 1}`} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" loading="lazy" />
+                                    <div className="absolute inset-0 bg-primary/20 mix-blend-overlay opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+                                        <div className="w-12 h-12 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center text-white border border-white/30">
+                                            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                                        </div>
                                     </div>
-                                    <p className="text-sm text-white/80 group-hover:text-gray-600 line-clamp-2">{ind.name}</p>
-                                </Link>
+                                </div>
                             ))}
                         </div>
-                    </div>
-                </section>
-            </main>
+                    </AnimatedSection>
+                </div>
+            </section>
+            )}
+
+            {/* 8. Projects & Achievements */}
+            <section id="projects" className="py-32 bg-surface dark:bg-surfaceDark scroll-mt-20">
+                <div className="container mx-auto px-6">
+                    <AnimatedSection>
+                        <div className="max-w-4xl mx-auto text-center mb-20">
+                            <h2 className="text-4xl md:text-5xl font-bold text-textDark dark:text-textLight mb-6 font-display">Projects & Achievements</h2>
+                            <div className="w-24 h-1.5 bg-primary mx-auto rounded-full"></div>
+                        </div>
+                         <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
+                            <ProjectCard title="Project Sentinel Integration" description="Led the successful integration of advanced sensor arrays for the national surveillance network." image="https://images.unsplash.com/photo-1517976487612-1f3dd222f77c?q=80&w=800&auto=format&fit=crop" status="Completed: Q4 2023" />
+                            <ProjectCard title="NextGen Comms Module" description="Development of a proprietary encrypted communication module for tactical radios." image="https://images.unsplash.com/photo-1555664424-778a1e5e1b48?q=80&w=800&auto=format&fit=crop" status="In Progress" />
+                            <ProjectCard title="National Tech Excellence Award" description="Awarded for outstanding contribution to national technological sovereignty." image="https://images.unsplash.com/photo-1573495627361-ab2d45330a63?q=80&w=800&auto=format&fit=crop" status="Achieved: 2023" />
+                        </div>
+                    </AnimatedSection>
+                </div>
+            </section>
+            
+            {/* 9. Leadership & Management Team */}
+            <section id="leadership" className="py-32 bg-lightBg dark:bg-surfaceDark/50 scroll-mt-20">
+                <div className="container mx-auto px-6">
+                     <AnimatedSection>
+                        <div className="max-w-4xl mx-auto text-center mb-20">
+                            <h2 className="text-4xl md:text-5xl font-bold text-textDark dark:text-textLight mb-6 font-display">Leadership Team</h2>
+                            <div className="w-24 h-1.5 bg-primary mx-auto rounded-full"></div>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-12 max-w-5xl mx-auto">
+                            {[
+                                { name: industry.contactPerson, role: `Director, ${industry.shortName}`, image: "https://images.unsplash.com/photo-1557862921-37829c790f19?q=80&w=400&auto=format&fit=crop" },
+                                { name: "Jane Doe", role: "Head of Engineering", image: "https://images.unsplash.com/photo-1560250097-0b93528c311a?q=80&w=400&auto=format&fit=crop" },
+                                { name: "John Smith", role: "Chief of Operations", image: "https://images.unsplash.com/photo-1599566150163-29194dcaad36?q=80&w=400&auto=format&fit=crop" }
+                            ].map((leader, i) => (
+                                <div key={i} className="group relative">
+                                    <div className="relative overflow-hidden rounded-3xl aspect-[4/5] mb-6">
+                                        <img src={leader.image} alt={leader.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                                        <div className="absolute inset-0 bg-gradient-to-t from-surfaceDark via-transparent to-transparent opacity-60"></div>
+                                        <div className="absolute inset-0 bg-primary/20 mix-blend-overlay opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                                    </div>
+                                    <div className="text-center">
+                                        <h4 className="text-2xl font-bold text-textDark dark:text-textLight font-display group-hover:text-primary transition-colors">{leader.name}</h4>
+                                        <p className="text-primary text-sm font-bold uppercase tracking-widest mt-2">{leader.role}</p>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </AnimatedSection>
+                </div>
+            </section>
+            
+            {/* 10. News & Updates */}
+            <section id="news" className="py-32 bg-surface dark:bg-surfaceDark scroll-mt-20">
+                <div className="container mx-auto px-6">
+                    <AnimatedSection>
+                        <div className="max-w-4xl mx-auto text-center mb-20">
+                            <h2 className="text-4xl md:text-5xl font-bold text-textDark dark:text-textLight mb-6 font-display">News & Updates</h2>
+                            <div className="w-24 h-1.5 bg-primary mx-auto rounded-full"></div>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
+                            {news.map((article) => (
+                                <div key={article.id} className="group bg-surface dark:bg-surfaceDark rounded-3xl shadow-sm overflow-hidden h-full flex flex-col border border-gray-100 dark:border-white/5 hover:border-primary/30 transition-all duration-500 hover:-translate-y-2 hover:shadow-xl">
+                                    <div className="p-8 flex flex-col flex-grow">
+                                        <p className="text-xs text-primary font-bold uppercase tracking-widest mb-4">{new Date(article.date).toLocaleDateString(language === 'am' ? 'am-ET' : 'en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                                        <h3 className="text-xl font-bold text-textDark dark:text-textLight mb-4 font-display leading-tight group-hover:text-primary transition-colors">{article.title[language]}</h3>
+                                        <p className="text-gray-500 dark:text-gray-400 text-sm leading-relaxed mb-6 line-clamp-3">{article.content[language]}</p>
+                                        <div className="mt-auto pt-6 border-t border-gray-100 dark:border-white/5">
+                                            <button onClick={() => setCurrentView({ page: 'News' })} className="font-bold text-primary group-hover:translate-x-2 transition-transform inline-block">
+                                                {t('read_more')} <span className="ml-2">&rarr;</span>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </AnimatedSection>
+                </div>
+            </section>
+            
+            {/* 11. Gallery */}
+             {hasPhotos && (
+            <section id="gallery" className="py-32 bg-lightBg dark:bg-surfaceDark/50 scroll-mt-20">
+                <div className="container mx-auto px-6">
+                    <AnimatedSection>
+                        <div className="max-w-4xl mx-auto text-center mb-20">
+                            <h2 className="text-4xl md:text-5xl font-bold text-textDark dark:text-textLight mb-6 font-display">Gallery / Media Center</h2>
+                            <div className="w-24 h-1.5 bg-primary mx-auto rounded-full"></div>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10">
+                            {industry.facilityPhotos.map((imgSrc, i) => (
+                                <div key={i} onClick={() => openLightbox(i)} className="group relative overflow-hidden rounded-3xl shadow-lg cursor-pointer aspect-video">
+                                    <img src={imgSrc} alt={`${industry.shortName} gallery image ${i + 1}`} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" loading="lazy" />
+                                    <div className="absolute inset-0 bg-primary/20 mix-blend-overlay opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+                                        <div className="w-12 h-12 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center text-white border border-white/30">
+                                            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </AnimatedSection>
+                </div>
+            </section>
+            )}
+
+            {/* 12. Downloads */}
+            <section id="downloads" className="py-32 bg-surface dark:bg-surfaceDark scroll-mt-20">
+                 <div className="container mx-auto px-6">
+                    <AnimatedSection>
+                        <div className="max-w-4xl mx-auto text-center mb-20">
+                            <h2 className="text-4xl md:text-5xl font-bold text-textDark dark:text-textLight mb-6 font-display">Downloads</h2>
+                            <div className="w-24 h-1.5 bg-primary mx-auto rounded-full"></div>
+                        </div>
+                        <div className="max-w-3xl mx-auto space-y-6">
+                            <DownloadItem title={`${industry.shortName} Corporate Brochure`} fileType="PDF" fileSize="5.2 MB" />
+                            <DownloadItem title={`${industry.shortName} Product Catalog`} fileType="PDF" fileSize="12.8 MB" />
+                            <DownloadItem title="Technical Specifications Sheet" fileType="PDF" fileSize="2.1 MB" />
+                        </div>
+                    </AnimatedSection>
+                 </div>
+            </section>
+
+            {/* 13. Contact Information */}
+            <section id="contact" className="py-32 bg-surfaceDark text-white relative overflow-hidden scroll-mt-20">
+                <div className="absolute inset-0 bg-primary/10 mix-blend-overlay"></div>
+                <div className="container mx-auto px-6 relative z-10">
+                    <AnimatedSection>
+                        <div className="max-w-4xl mx-auto text-center mb-20">
+                            <h2 className="text-4xl md:text-5xl font-bold text-white mb-6 font-display">Contact Information</h2>
+                            <div className="w-24 h-1.5 bg-primary mx-auto rounded-full"></div>
+                        </div>
+                        <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-10">
+                             <div className="bg-white/5 backdrop-blur-md p-10 rounded-3xl border border-white/10 text-center group hover:bg-white/10 transition-all duration-300">
+                                <div className="w-16 h-16 bg-primary/20 text-primary rounded-2xl flex items-center justify-center mx-auto mb-8 group-hover:bg-primary group-hover:text-white transition-all duration-300">
+                                    <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                                </div>
+                                <h4 className="font-bold text-xl mb-4 font-display">Address</h4>
+                                <p className="text-gray-300 leading-relaxed">{industry.divisionalContact.address}</p>
+                            </div>
+                             <div className="bg-white/5 backdrop-blur-md p-10 rounded-3xl border border-white/10 text-center group hover:bg-white/10 transition-all duration-300">
+                                <div className="w-16 h-16 bg-primary/20 text-primary rounded-2xl flex items-center justify-center mx-auto mb-8 group-hover:bg-primary group-hover:text-white transition-all duration-300">
+                                    <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                                </div>
+                                <h4 className="font-bold text-xl mb-4 font-display">Inquiries</h4>
+                                <p className="text-gray-300 leading-relaxed">Phone: {industry.divisionalContact.phone}</p>
+                                <p className="text-gray-300 leading-relaxed">Email: {industry.divisionalContact.email}</p>
+                            </div>
+                             <div className="bg-white/5 backdrop-blur-md p-10 rounded-3xl border border-white/10 text-center group hover:bg-white/10 transition-all duration-300">
+                                <div className="w-16 h-16 bg-primary/20 text-primary rounded-2xl flex items-center justify-center mx-auto mb-8 group-hover:bg-primary group-hover:text-white transition-all duration-300">
+                                    <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                </div>
+                                <h4 className="font-bold text-xl mb-4 font-display">Work Hours</h4>
+                                <p className="text-gray-300 leading-relaxed">Monday - Friday: 8:00 AM - 5:00 PM</p>
+                                <p className="text-gray-300 leading-relaxed">Saturday & Sunday: Closed</p>
+                            </div>
+                        </div>
+                    </AnimatedSection>
+                </div>
+            </section>
+            
+            {isLightboxOpen && hasPhotos && (
+                <Lightbox 
+                    images={industry.facilityPhotos}
+                    selectedIndex={selectedImageIndex}
+                    onClose={closeLightbox}
+                    onNext={goToNext}
+                    onPrev={goToPrev}
+                    animationDirection={animationDirection}
+                />
+            )}
         </div>
     );
 };

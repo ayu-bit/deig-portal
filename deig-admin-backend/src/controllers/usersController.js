@@ -1,100 +1,80 @@
 
 const { User, Role } = require('../models');
-const bcrypt = require('bcryptjs');
 
-const getAllUsers = async (req, res) => {
-  try {
-    const users = await User.findAll({ include: Role });
-    // Transform to flatten role name for frontend
-    const formattedUsers = users.map(u => ({
-        ...u.toJSON(),
-        role: u.Role ? u.Role.name : 'Unknown'
-    }));
-    res.status(200).json(formattedUsers);
-  } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message });
-  }
-};
-
-const createUser = async (req, res) => {
-    const { name, email, password, role } = req.body; // Frontend sends role name or ID
-  try {
-    const userExists = await User.findOne({ where: { email } });
-    if (userExists) return res.status(400).json({ message: 'User already exists' });
-
-    // Find role by name (frontend sends string like 'Admin') or ID
-    let roleRecord;
-    if (typeof role === 'string' && isNaN(role)) {
-         roleRecord = await Role.findOne({ where: { name: role } });
-    } else {
-         roleRecord = await Role.findByPk(role);
+// Get all users
+exports.getAllUsers = async (req, res) => {
+    try {
+        const users = await User.findAll({
+            include: { model: Role, attributes: ['name'] },
+            attributes: { exclude: ['password'] }
+        });
+        res.json(users);
+    } catch (error) {
+        res.status(500).json({ message: "Error fetching users", error: error.message });
     }
-
-    if (!roleRecord) return res.status(400).json({ message: 'Invalid role' });
-
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
-
-    const user = await User.create({ 
-        name, 
-        email, 
-        password: hashedPassword, 
-        roleId: roleRecord.id,
-        avatarUrl: 'https://via.placeholder.com/150' 
-    });
-    
-    res.status(201).json({ message: 'User created', user });
-  } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message });
-  }
 };
 
-const getUserById = async (req, res) => {
-  try {
-    const user = await User.findByPk(req.params.id, { include: Role });
-    if (user) res.status(200).json(user);
-    else res.status(404).json({ message: 'User not found' });
-  } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message });
-  }
+// Get user by ID
+exports.getUserById = async (req, res) => {
+    try {
+        const user = await User.findByPk(req.params.id, {
+            include: { model: Role, attributes: ['name'] },
+            attributes: { exclude: ['password'] }
+        });
+        if (!user) return res.status(404).json({ message: "User not found" });
+        res.json(user);
+    } catch (error) {
+        res.status(500).json({ message: "Error fetching user", error: error.message });
+    }
 };
 
-const updateUser = async (req, res) => {
-  const { name, email, role, status } = req.body;
-  try {
-    const user = await User.findByPk(req.params.id);
-    if (user) {
-        user.name = name || user.name;
-        user.email = email || user.email;
-        user.status = status || user.status;
+// Create a new user
+exports.createUser = async (req, res) => {
+    // This is a simplified version. A real implementation would use the register flow.
+    try {
+        const { name, email, password, roleName } = req.body;
+        const role = await Role.findOne({ where: { name: roleName }});
+        if (!role) return res.status(400).json({ message: "Invalid role specified." });
+
+        const newUser = await User.create({ name, email, password, roleId: role.id });
+        const userResponse = newUser.toJSON();
+        delete userResponse.password;
+        res.status(201).json(userResponse);
+    } catch (error) {
+        res.status(500).json({ message: "Error creating user", error: error.message });
+    }
+};
+
+// Update a user
+exports.updateUser = async (req, res) => {
+    try {
+        const { name, email, status, roleName } = req.body;
+        const user = await User.findByPk(req.params.id);
+        if (!user) return res.status(404).json({ message: "User not found" });
         
-        if (role) {
-             let roleRecord = await Role.findOne({ where: { name: role } });
-             if (roleRecord) user.roleId = roleRecord.id;
+        const updateData = { name, email, status };
+        if (roleName) {
+            const role = await Role.findOne({ where: { name: roleName }});
+            if (!role) return res.status(400).json({ message: "Invalid role specified." });
+            updateData.roleId = role.id;
         }
-        
-        await user.save();
-        res.status(200).json(user);
-    } else {
-        res.status(404).json({ message: 'User not found' });
+
+        await user.update(updateData);
+        res.json({ message: "User updated successfully" });
+    } catch (error) {
+        res.status(500).json({ message: "Error updating user", error: error.message });
     }
-  } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message });
-  }
 };
 
-const deleteUser = async (req, res) => {
-  try {
-    const user = await User.findByPk(req.params.id);
-    if (user) {
+// Delete a user
+exports.deleteUser = async (req, res) => {
+    try {
+        const user = await User.findByPk(req.params.id);
+        if (!user) return res.status(404).json({ message: "User not found" });
+
         await user.destroy();
-        res.status(200).json({ message: 'User removed' });
-    } else {
-        res.status(404).json({ message: 'User not found' });
+        res.json({ message: "User deleted successfully" });
+    } catch (error) {
+        res.status(500).json({ message: "Error deleting user", error: error.message });
     }
-  } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message });
-  }
 };
-
-module.exports = { getAllUsers, createUser, getUserById, updateUser, deleteUser };

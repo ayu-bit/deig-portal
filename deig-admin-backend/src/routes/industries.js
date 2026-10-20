@@ -1,25 +1,20 @@
 
 const express = require('express');
 const router = express.Router();
-const {
-  getAllIndustries,
-  getIndustryById,
-  createIndustry,
-  updateIndustry,
-} = require('../controllers/industriesController');
-const { protect } = require('../middleware/auth');
-const { checkPermissions } = require('../middleware/roles');
+const industriesController = require('../controllers/industriesController');
+const { verifyToken } = require('../middleware/auth');
+const { checkRole } = require('../middleware/roles');
+const { logAction } = require('../middleware/audit');
 
-// Public route to get all industries for the frontend
-router.get('/', getAllIndustries);
+const canEditIndustries = checkRole(['Admin', 'Industry Manager']);
 
-// Protected route to create a new industry
-router.post('/', protect, checkPermissions(['industry:edit']), createIndustry);
+// Public routes
+router.get('/', industriesController.getAllIndustries);
+router.get('/:id', industriesController.getIndustryById);
 
-router.route('/:id')
-    // Public route to get a single industry
-  .get(getIndustryById)
-  // Protected route to update an industry
-  .put(protect, checkPermissions(['industry:edit']), updateIndustry);
+// Protected routes
+router.post('/', verifyToken, canEditIndustries, logAction('Create Industry'), industriesController.createIndustry);
+router.put('/:id', verifyToken, canEditIndustries, logAction('Update Industry'), industriesController.updateIndustry);
+router.delete('/:id', verifyToken, checkRole(['Admin']), logAction('Delete Industry'), industriesController.deleteIndustry);
 
 module.exports = router;

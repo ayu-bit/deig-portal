@@ -155,13 +155,14 @@ async function seedDatabase() {
 
 async function startServer() {
   const app = express();
-  const PORT = Number(process.env.PORT) || 3000;
+  // In development, dev server runs on port 3000. In cloud hosting (Render, etc.), respect process.env.PORT.
+  const PORT = process.env.PORT ? Number(process.env.PORT) : 3000;
 
   // Sync database
   try {
     await sequelize.authenticate();
     console.log('Database connection has been established successfully.');
-    await sequelize.sync({ alter: true });
+    await sequelize.sync();
     console.log('Database synced.');
     await seedDatabase();
     console.log('Database seeding checked/completed.');
@@ -182,7 +183,7 @@ async function startServer() {
   } else {
     const distPath = path.join(__dirname, 'dist');
     app.use(express.static(distPath));
-    app.get('*', (_req, res) => {
+    app.use((_req, res) => {
       res.sendFile(path.join(distPath, 'index.html'));
     });
   }

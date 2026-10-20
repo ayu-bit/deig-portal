@@ -1,90 +1,50 @@
+
+const sequelize = require('../config/db');
 const { DataTypes } = require('sequelize');
-const { sequelize } = require('../config/db');
 
-// --- User Model ---
-const User = require('./user');
+const db = {};
 
-// --- Role Model ---
-const Role = sequelize.define('Role', {
-  id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
-  name: { type: DataTypes.STRING, allowNull: false, unique: true }, 
-  description: { type: DataTypes.STRING },
-  permissions: { type: DataTypes.JSON, defaultValue: [] }, 
-});
+db.Sequelize = DataTypes;
+db.sequelize = sequelize;
 
-// --- Industry Model ---
-const Industry = require('./industry');
+// Import models
+db.User = require('./user')(sequelize, DataTypes);
+db.Role = require('./role')(sequelize, DataTypes);
+db.Industry = require('./industry')(sequelize, DataTypes);
+db.News = require('./news')(sequelize, DataTypes);
+db.Vacancy = require('./vacancy')(sequelize, DataTypes);
+db.Applicant = require('./applicant')(sequelize, DataTypes);
+db.Media = require('./media')(sequelize, DataTypes);
+db.Contact = require('./contact')(sequelize, DataTypes);
+db.AuditLog = require('./auditLog')(sequelize, DataTypes);
+db.Milestone = require('./milestone')(sequelize, DataTypes);
+db.Tender = require('./tender')(sequelize, DataTypes);
+db.Supplier = require('./supplier')(sequelize, DataTypes);
+db.Setting = require('./setting')(sequelize, DataTypes);
+db.SecurityAlert = require('./securityAlert')(sequelize, DataTypes);
+db.WhitelistedIp = require('./whitelistedIp')(sequelize, DataTypes);
 
-// --- Supplier Model ---
-const Supplier = sequelize.define('Supplier', {
-  id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
-  companyName: { type: DataTypes.STRING, allowNull: false },
-  regNumber: { type: DataTypes.STRING },
-  address: { type: DataTypes.TEXT },
-  country: { type: DataTypes.STRING },
-  website: { type: DataTypes.STRING },
-  contactName: { type: DataTypes.STRING, allowNull: false },
-  contactTitle: { type: DataTypes.STRING },
-  contactEmail: { type: DataTypes.STRING, allowNull: false },
-  contactPhone: { type: DataTypes.STRING },
-  services: { type: DataTypes.TEXT },
-  documentsUrl: { type: DataTypes.STRING },
-  status: { type: DataTypes.ENUM('Pending', 'Verified', 'Blacklisted', 'Archived'), defaultValue: 'Pending' },
-  registeredAt: { type: DataTypes.DATE, defaultValue: DataTypes.NOW }
-});
+// Define associations
+// User - Role
+db.Role.hasMany(db.User, { foreignKey: 'roleId' });
+db.User.belongsTo(db.Role, { foreignKey: 'roleId' });
 
-// --- News Model ---
-const News = require('./news');
+// Vacancy - Applicant
+db.Vacancy.hasMany(db.Applicant, { foreignKey: 'vacancyId' });
+db.Applicant.belongsTo(db.Vacancy, { foreignKey: 'vacancyId' });
 
-// --- Vacancy Model ---
-const Vacancy = require('./vacancy');
+// User associations (e.g., who created what)
+db.User.hasMany(db.News, { foreignKey: 'authorId', as: 'authoredNews' });
+db.News.belongsTo(db.User, { foreignKey: 'authorId', as: 'author' });
 
-// --- Applicant Model ---
-const Applicant = sequelize.define('Applicant', {
-  id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
-  name: { type: DataTypes.STRING, allowNull: false },
-  email: { type: DataTypes.STRING, allowNull: false },
-  status: { type: DataTypes.ENUM('New', 'Reviewed', 'Interview', 'Hired', 'Rejected'), defaultValue: 'New' },
-  cvUrl: { type: DataTypes.STRING },
-  notes: { type: DataTypes.JSON, defaultValue: [] },
-  rating: { type: DataTypes.INTEGER, defaultValue: 0 },
-});
+db.User.hasMany(db.Media, { foreignKey: 'uploaderId' });
+db.Media.belongsTo(db.User, { foreignKey: 'uploaderId', as: 'uploader' });
 
-// --- Page Model ---
-const Page = require('./page');
+db.User.hasMany(db.AuditLog, { foreignKey: 'userId' });
+db.AuditLog.belongsTo(db.User, { foreignKey: 'userId' });
 
-// --- Inquiry Model ---
-const Inquiry = require('./inquiry');
+db.User.hasMany(db.Contact, { foreignKey: 'assigneeId', as: 'assignedContacts' });
+db.Contact.belongsTo(db.User, { foreignKey: 'assigneeId', as: 'assignee' });
 
-// --- SecurityLog Model ---
-const SecurityLog = require('./securityLog');
 
-// --- Media Model ---
-const Media = require('./media');
-
-// --- Tender Model ---
-const Tender = require('./tender');
-
-// --- Relationships ---
-Role.hasMany(User, { foreignKey: 'roleId' });
-User.belongsTo(Role, { foreignKey: 'roleId' });
-
-Vacancy.hasMany(Applicant, { foreignKey: 'vacancyId' });
-Applicant.belongsTo(Vacancy, { foreignKey: 'vacancyId' });
-
-User.hasMany(News, { foreignKey: 'authorId', as: 'authoredNews' });
-News.belongsTo(User, { foreignKey: 'authorId', as: 'author' });
-
-User.hasMany(Media, { foreignKey: 'uploadedById', as: 'uploadedAssets' });
-Media.belongsTo(User, { foreignKey: 'uploadedById', as: 'uploadedBy' });
-
-User.hasMany(SecurityLog, { foreignKey: 'userId' });
-SecurityLog.belongsTo(User, { foreignKey: 'userId' });
-
-User.hasMany(Inquiry, { foreignKey: 'assignedToId', as: 'assignedInquiries' });
-Inquiry.belongsTo(User, { foreignKey: 'assignedToId', as: 'assignedTo' });
-
-module.exports = {
-  sequelize,
-  User, Role, Industry, News, Vacancy, Applicant, Page, Supplier, Tender, Inquiry, SecurityLog, Media
-};
+module.exports = db;

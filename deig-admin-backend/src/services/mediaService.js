@@ -1,37 +1,51 @@
-const multer = require('multer');
+const { Media } = require('../models');
+const fs = require('fs');
 const path = require('path');
 
-// Set up storage engine for Multer
-const storage = multer.diskStorage({
-  destination: './uploads/',
-  filename: function (req, file, cb) {
-    cb(null, file.fieldname + '-' + Date.now() + path.extname(file.originalname));
-  },
-});
+const getFileType = (mimetype) => {
+    if (mimetype.startsWith('image/')) return 'Image';
+    if (mimetype.startsWith('video/')) return 'Video';
+    if (mimetype === 'application/pdf') return 'Document';
+    if (mimetype.includes('zip') || mimetype.includes('compressed')) return 'Archive';
+    return 'Document';
+};
 
-// Initialize upload variable
-const upload = multer({
-  storage: storage,
-  limits: { fileSize: 50 * 1024 * 1024 }, // 50MB limit
-  fileFilter: function (req, file, cb) {
-    checkFileType(file, cb);
-  },
-});
+// This service abstracts storage logic. It can be swapped for an S3 service.
+class MediaService {
 
-// Check file type
-function checkFileType(file, cb) {
-  // Allowed extensions
-  const filetypes = /jpeg|jpg|png|gif|mp4|pdf|zip/;
-  // Check extension
-  const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
-  // Check mime type
-  const mimetype = filetypes.test(file.mimetype);
+    async handleFileUpload(file, user) { // user can be null for public uploads
+        // For local storage, the file is already in `uploads/`. We just need to create a DB record.
+        // The URL will be relative to the server.
+        const fileUrl = `/uploads/${file.filename}`;
 
-  if (mimetype && extname) {
-    return cb(null, true);
-  } else {
-    cb('Error: Invalid file type!');
-  }
+        const newMedia = await Media.create({
+            name: file.originalname,
+            url: fileUrl,
+            type: getFileType(file.mimetype),
+            size: file.size,
+            uploaderId: user ? user.id : null
+        });
+
+        return newMedia;
+    }
+
+    async handleFileDelete(mediaFile) {
+         // 1. Delete the physical file if it exists (for local storage)
+        const storageType = process.env.STORAGE_TYPE || 'local';
+        if (storageType === 'local') {
+            // mediaFile.url is like '/uploads/filename'. We need to build the absolute path.
+            const filePath = path.join(__dirname, '../../', mediaFile.url);
+            if (fs.existsSync(filePath)) {
+                fs.unlinkSync(filePath);
+            }
+        }
+        // If using S3, you would call the S3 delete object method here.
+
+        // 2. Delete the database record
+        await mediaFile.destroy();
+
+        return true;
+    }
 }
 
-module.exports = { upload };
+module.exports = new MediaService();

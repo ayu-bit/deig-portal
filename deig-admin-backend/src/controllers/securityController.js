@@ -1,44 +1,96 @@
 
-const { SecurityLog, User } = require('../models');
-// Active sessions would be managed in memory (e.g., Redis) or a DB in a real app
-const ACTIVE_SESSIONS = []; // Placeholder
+const { AuditLog, User, SecurityAlert, WhitelistedIp } = require('../models');
 
-const getSecurityLogs = async (req, res) => {
+exports.getAuditLogs = async (req, res) => {
     try {
-        const logs = await SecurityLog.findAll({
+        const logs = await AuditLog.findAll({
+            limit: 100, // Limit results for performance
             order: [['createdAt', 'DESC']],
-            include: { model: User, attributes: ['name', 'avatarUrl'] }
+            include: { model: User, attributes: ['name'] }
         });
         
-        // Format for frontend
-        const formatted = logs.map(l => {
-            const json = l.toJSON();
-            return {
-                id: json.id,
-                user: json.User ? json.User.name : 'Unknown',
-                avatarUrl: json.User ? json.User.avatarUrl : '',
-                action: json.action,
-                target: json.target,
-                ipAddress: json.ipAddress,
-                timestamp: json.createdAt
-            }
-        });
-        
-        res.status(200).json(formatted);
+        // Format to match frontend expectation
+        const formattedLogs = logs.map(log => ({
+            id: log.id,
+            user: log.User ? log.User.name : 'System/Unknown',
+            action: log.action,
+            details: log.details,
+            ipAddress: log.ipAddress,
+            timestamp: log.createdAt,
+        }));
+
+        res.json(formattedLogs);
     } catch (error) {
-        res.status(500).json({ message: 'Server error', error: error.message });
+        res.status(500).json({ message: "Error fetching audit logs", error: error.message });
     }
 };
 
-const getActiveSessions = async (req, res) => {
-    // This is a placeholder. A real implementation would query a session store.
-    res.status(200).json(ACTIVE_SESSIONS);
+exports.getSecurityAlerts = async (req, res) => {
+    try {
+        const alerts = await SecurityAlert.findAll({
+            limit: 50,
+            order: [['createdAt', 'DESC']]
+        });
+        
+        // Format to match frontend expectation (mapping createdAt to timestamp)
+        const formattedAlerts = alerts.map(alert => ({
+            id: alert.id,
+            type: alert.type,
+            details: alert.details,
+            severity: alert.severity,
+            timestamp: alert.createdAt,
+        }));
+
+        res.json(formattedAlerts);
+    } catch (error) {
+        res.status(500).json({ message: "Error fetching security alerts", error: error.message });
+    }
 };
 
-const revokeSession = async (req, res) => {
-    // Placeholder logic
-    res.status(200).json({ message: `Session ${req.params.id} revoked.` });
+exports.getWhitelistedIps = async (req, res) => {
+    try {
+        const ips = await WhitelistedIp.findAll({
+            order: [['createdAt', 'DESC']]
+        });
+        
+        const formattedIps = ips.map(ip => ({
+            id: ip.id,
+            ipAddress: ip.ipAddress,
+            description: ip.description,
+            addedBy: ip.addedBy,
+            dateAdded: ip.createdAt,
+        }));
+
+        res.json(formattedIps);
+    } catch (error) {
+        res.status(500).json({ message: "Error fetching whitelisted IPs", error: error.message });
+    }
 };
 
+exports.addWhitelistedIp = async (req, res) => {
+    try {
+        const { ipAddress, description } = req.body;
+        const addedBy = req.user ? req.user.name : 'Admin';
+        
+        const newIp = await WhitelistedIp.create({
+            ipAddress,
+            description,
+            addedBy
+        });
+        
+        res.status(201).json(newIp);
+    } catch (error) {
+        res.status(500).json({ message: "Error adding whitelisted IP", error: error.message });
+    }
+};
 
-module.exports = { getSecurityLogs, getActiveSessions, revokeSession };
+exports.deleteWhitelistedIp = async (req, res) => {
+    try {
+        const ip = await WhitelistedIp.findByPk(req.params.id);
+        if (!ip) return res.status(404).json({ message: "IP not found" });
+        await ip.destroy();
+        res.json({ message: "IP removed from whitelist" });
+    } catch (error) {
+        res.status(500).json({ message: "Error removing IP", error: error.message });
+    }
+};

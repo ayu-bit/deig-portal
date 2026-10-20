@@ -1,16 +1,19 @@
-const mongoose = require('mongoose');
 
-const RoleSchema = new mongoose.Schema({
-  name: {
-    type: String,
-    required: true,
-    unique: true,
-    enum: ['Admin', 'Editor', 'Industry Manager', 'HR Manager', 'Viewer'],
-  },
-  description: String,
-  permissions: [{
-    type: String,
-  }],
-});
-
-module.exports = mongoose.model('Role', RoleSchema);
+module.exports = (sequelize, DataTypes) => {
+  const Role = sequelize.define('Role', {
+    id: {
+      type: DataTypes.INTEGER,
+      autoIncrement: true,
+      primaryKey: true,
+    },
+    name: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      unique: true,
+    },
+    description: {
+      type: DataTypes.STRING,
+    },
+  });
+  return Role;
+};

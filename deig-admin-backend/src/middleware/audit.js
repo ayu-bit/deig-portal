@@ -1,11 +1,23 @@
-const auditLog = (action, target) => {
-  return (req, res, next) => {
-    // In a real application, you would save this to a database
-    console.log(
-      `[AUDIT] User: ${req.user ? req.user.name : 'Unknown'} | Action: ${action} | Target: ${target} | IP: ${req.ip}`
-    );
+const { AuditLog } = require('../models');
+
+const logAction = (action) => async (req, res, next) => {
+    try {
+        const userId = req.user ? req.user.id : null;
+        const ip = req.ip;
+        const details = `${req.method} ${req.originalUrl}`;
+        
+        await AuditLog.create({
+            userId,
+            action,
+            details,
+            ipAddress: ip
+        });
+
+    } catch (error) {
+        console.error('Audit Log Error:', error);
+    }
+
     next();
-  };
 };
 
-module.exports = { auditLog };
+module.exports = { logAction };

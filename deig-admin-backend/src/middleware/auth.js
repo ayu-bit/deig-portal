@@ -2,37 +2,31 @@
 const jwt = require('jsonwebtoken');
 const { User, Role } = require('../models');
 
-const protect = async (req, res, next) => {
-  let token;
+const verifyToken = async (req, res, next) => {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
 
-  if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
-    try {
-      token = req.headers.authorization.split(' ')[1];
-      // Use fallback secret 'deig_secret_key_123' if env var is missing
-      const secret = process.env.JWT_SECRET || 'deig_secret_key_123';
-      
-      const decoded = jwt.verify(token, secret);
-      
-      const user = await User.findByPk(decoded.id, {
-          attributes: { exclude: ['password'] },
-          include: Role
-      });
-      
-      // Normalize user object for roles middleware
-      if(user) {
-          req.user = user.toJSON();
-          req.user.role = user.Role; // Flatten role access
-          next();
-      } else {
-          res.status(401).json({ message: 'Not authorized, user not found' });
-      }
-    } catch (error) {
-      console.error('Token verification failed:', error.message);
-      res.status(401).json({ message: 'Not authorized, token failed' });
+    if (!token) {
+        return res.status(403).json({ message: 'A token is required for authentication' });
     }
-  } else {
-    res.status(401).json({ message: 'Not authorized, no token' });
-  }
+
+    try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'deig-default-secret-jwt-key-2026');
+        
+        const user = await User.findByPk(decoded.id, {
+            include: { model: Role }
+        });
+
+        if (!user) {
+            return res.status(401).json({ message: 'Invalid token: User not found.' });
+        }
+        
+        req.user = user;
+
+    } catch (err) {
+        return res.status(401).json({ message: 'Invalid Token' });
+    }
+    return next();
 };
 
-module.exports = { protect };
+module.exports = { verifyToken };

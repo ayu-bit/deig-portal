@@ -1,60 +1,90 @@
 
 const { Applicant } = require('../models');
+const mediaService = require('../services/mediaService');
 
-// @desc    Get all applicants for a vacancy
-const getApplicantsByVacancy = async (req, res) => {
-  try {
-    const applicants = await Applicant.findAll({ 
-        where: { vacancyId: req.params.vacancyId },
-        order: [['createdAt', 'DESC']]
-    });
-    res.status(200).json(applicants);
-  } catch (error) {
-    res.status(500).json({ message: 'Server error fetching applicants', error: error.message });
-  }
-};
-
-// @desc    Create a new applicant
-const createApplicant = async (req, res) => {
+// For public, general applications
+exports.createPublicApplicant = async (req, res) => {
     try {
-        const { name, email, vacancyId } = req.body;
-        // Construct full URL for the uploaded file if it exists
-        const baseUrl = process.env.APP_URL || `http://localhost:${process.env.PORT || 5001}`;
-        const cvUrl = req.file ? `${baseUrl}/uploads/${req.file.filename}` : null;
+        const { name, email } = req.body;
+        if (!req.file) {
+            return res.status(400).json({ message: 'CV attachment is required.' });
+        }
 
-        const applicant = await Applicant.create({
+        // Handle CV upload
+        const cvFile = await mediaService.handleFileUpload(req.file, null); // null user for public uploads
+
+        const newApplicant = await Applicant.create({
             name,
             email,
-            vacancyId: parseInt(vacancyId) || 0, // Ensure ID matches model type (Integer in Sequelize)
-            cvUrl,
-            status: 'New',
-            appliedDate: new Date()
+            cvUrl: cvFile.url,
+            vacancyId: null // This signifies a general application
         });
-        res.status(201).json(applicant);
+        res.status(201).json(newApplicant);
     } catch (error) {
-        res.status(500).json({ message: 'Server error creating applicant', error: error.message });
+        res.status(500).json({ message: "Error submitting application", error: error.message });
     }
 };
 
-// @desc    Update applicant status
-const updateApplicantStatus = async (req, res) => {
-  const { status } = req.body;
-  try {
-    const applicant = await Applicant.findByPk(req.params.id);
-    if (applicant) {
-        applicant.status = status;
-        await applicant.save();
-        res.status(200).json(applicant);
-    } else {
-        res.status(404).json({ message: 'Applicant not found' });
+// Placeholder for all CRUD operations
+
+exports.getAllApplicants = async (req, res) => {
+    try {
+        const applicants = await Applicant.findAll();
+        res.json(applicants);
+    } catch (error) {
+        res.status(500).json({ message: "Error fetching applicants", error: error.message });
     }
-  } catch (error) {
-    res.status(500).json({ message: 'Server error updating applicant status', error: error.message });
-  }
 };
 
-module.exports = {
-  getApplicantsByVacancy,
-  createApplicant,
-  updateApplicantStatus,
+exports.getApplicantsByVacancy = async (req, res) => {
+    try {
+        const applicants = await Applicant.findAll({ where: { vacancyId: req.params.vacancyId }});
+        res.json(applicants);
+    } catch (error) {
+        res.status(500).json({ message: "Error fetching applicants for vacancy", error: error.message });
+    }
+};
+
+exports.getApplicantById = async (req, res) => {
+    try {
+        const applicant = await Applicant.findByPk(req.params.id);
+        if (!applicant) return res.status(404).json({ message: "Applicant not found" });
+        res.json(applicant);
+    } catch (error) {
+        res.status(500).json({ message: "Error fetching applicant", error: error.message });
+    }
+};
+
+exports.createApplicant = async (req, res) => {
+    // This would typically be a public route with file handling for CV
+    try {
+        const newApplicant = await Applicant.create(req.body);
+        res.status(201).json(newApplicant);
+    } catch (error) {
+        res.status(500).json({ message: "Error creating applicant", error: error.message });
+    }
+};
+
+exports.updateApplicant = async (req, res) => {
+     try {
+        const applicant = await Applicant.findByPk(req.params.id);
+        if (!applicant) return res.status(404).json({ message: "Applicant not found" });
+        // Only allow updating status, notes, rating
+        const { status, notes, rating } = req.body;
+        await applicant.update({ status, notes, rating });
+        res.json({ message: "Applicant updated successfully" });
+    } catch (error) {
+        res.status(500).json({ message: "Error updating applicant", error: error.message });
+    }
+};
+
+exports.deleteApplicant = async (req, res) => {
+    try {
+        const applicant = await Applicant.findByPk(req.params.id);
+        if (!applicant) return res.status(404).json({ message: "Applicant not found" });
+        await applicant.destroy();
+        res.json({ message: "Applicant deleted successfully" });
+    } catch (error) {
+        res.status(500).json({ message: "Error deleting applicant", error: error.message });
+    }
 };

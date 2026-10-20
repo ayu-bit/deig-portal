@@ -1,71 +1,59 @@
 
-const { Vacancy, Applicant } = require('../models');
+const { Vacancy } = require('../models');
 
-// @desc    Get all vacancies with applicant counts
-const getAllVacancies = async (req, res) => {
-  try {
-    const vacancies = await Vacancy.findAll({
-        order: [['createdAt', 'DESC']]
-    });
-    
-    // Calculate counts (doing this in JS for simplicity, could be a subquery)
-    const vacanciesWithCounts = await Promise.all(
-        vacancies.map(async (vacancy) => {
-            const applicantCount = await Applicant.count({ where: { vacancyId: vacancy.id } });
-            return { ...vacancy.toJSON(), applicantCount };
-        })
-    );
-    res.status(200).json(vacanciesWithCounts);
-  } catch (error) {
-    res.status(500).json({ message: 'Server error fetching vacancies', error: error.message });
-  }
+// Placeholder for all CRUD operations
+
+exports.getAllVacancies = async (req, res) => {
+    try {
+        const { status } = req.query;
+        const where = {};
+        if (status) {
+            where.status = status;
+        }
+        const vacancies = await Vacancy.findAll({ where });
+        res.json(vacancies);
+    } catch (error) {
+        res.status(500).json({ message: "Error fetching vacancies", error: error.message });
+    }
 };
 
-// @desc    Create a vacancy
-const createVacancy = async (req, res) => {
-  try {
-    const savedVacancy = await Vacancy.create(req.body);
-    res.status(201).json(savedVacancy);
-  } catch (error) {
-    res.status(500).json({ message: 'Server error creating vacancy', error: error.message });
-  }
+exports.getVacancyById = async (req, res) => {
+    try {
+        const vacancy = await Vacancy.findByPk(req.params.id);
+        if (!vacancy) return res.status(404).json({ message: "Vacancy not found" });
+        res.json(vacancy);
+    } catch (error) {
+        res.status(500).json({ message: "Error fetching vacancy", error: error.message });
+    }
 };
 
-// @desc    Update a vacancy
-const updateVacancy = async (req, res) => {
-  try {
-    const vacancy = await Vacancy.findByPk(req.params.id);
-    if (vacancy) {
+exports.createVacancy = async (req, res) => {
+    try {
+        const newVacancy = await Vacancy.create(req.body);
+        res.status(201).json(newVacancy);
+    } catch (error) {
+        res.status(500).json({ message: "Error creating vacancy", error: error.message });
+    }
+};
+
+exports.updateVacancy = async (req, res) => {
+     try {
+        const vacancy = await Vacancy.findByPk(req.params.id);
+        if (!vacancy) return res.status(404).json({ message: "Vacancy not found" });
         await vacancy.update(req.body);
-        res.status(200).json(vacancy);
-    } else {
-        res.status(404).json({ message: 'Vacancy not found' });
+        res.json({ message: "Vacancy updated successfully" });
+    } catch (error) {
+        res.status(500).json({ message: "Error updating vacancy", error: error.message });
     }
-  } catch (error) {
-    res.status(500).json({ message: 'Server error updating vacancy', error: error.message });
-  }
 };
 
-// @desc    Delete a vacancy
-const deleteVacancy = async (req, res) => {
-  try {
-    const vacancy = await Vacancy.findByPk(req.params.id);
-    if (vacancy) {
+exports.deleteVacancy = async (req, res) => {
+    try {
+        const vacancy = await Vacancy.findByPk(req.params.id);
+        if (!vacancy) return res.status(404).json({ message: "Vacancy not found" });
         await vacancy.destroy();
-        // Also delete associated applicants
-        await Applicant.destroy({ where: { vacancyId: req.params.id } });
-        res.status(200).json({ message: 'Vacancy removed' });
-    } else {
-        res.status(404).json({ message: 'Vacancy not found' });
+        res.json({ message: "Vacancy deleted successfully" });
+    } catch (error) {
+        res.status(500).json({ message: "Error deleting vacancy", error: error.message });
     }
-  } catch (error) {
-    res.status(500).json({ message: 'Server error deleting vacancy', error: error.message });
-  }
-};
-
-module.exports = {
-  getAllVacancies,
-  createVacancy,
-  updateVacancy,
-  deleteVacancy,
 };

@@ -1,21 +1,20 @@
 
 const express = require('express');
 const router = express.Router();
-const {
-  getAllSuppliers,
-  getSupplierById,
-  updateSupplierStatus,
-} = require('../controllers/suppliersController');
-const { protect } = require('../middleware/auth');
-const { checkPermissions } = require('../middleware/roles');
+const multer = require('multer');
+const supplierController = require('../controllers/supplierController');
+const { verifyToken } = require('../middleware/auth');
+const { checkRole } = require('../middleware/roles');
+const { logAction } = require('../middleware/audit');
 
-router.route('/')
-  .get(protect, checkPermissions(['settings:view']), getAllSuppliers);
+const upload = multer({ dest: 'uploads/' });
+const canManage = checkRole(['Admin', 'Industry Manager']);
 
-router.route('/:id')
-  .get(protect, checkPermissions(['settings:view']), getSupplierById);
+// Public
+router.post('/public', upload.single('profile'), supplierController.createPublicSupplier);
 
-router.route('/:id/status')
-  .put(protect, checkPermissions(['settings:edit']), updateSupplierStatus);
+// Protected
+router.get('/', verifyToken, canManage, supplierController.getAllSuppliers);
+router.put('/:id/status', verifyToken, canManage, logAction('Update Supplier Status'), supplierController.updateSupplierStatus);
 
 module.exports = router;

@@ -1,23 +1,18 @@
 
 const express = require('express');
 const router = express.Router();
-const {
-  getAllNews,
-  getNewsById,
-  createNews,
-  updateNews,
-  deleteNews,
-} = require('../controllers/newsController');
-const { protect } = require('../middleware/auth');
-const { checkPermissions } = require('../middleware/roles');
+const newsController = require('../controllers/newsController');
+const { verifyToken } = require('../middleware/auth');
+const { isEditorOrAdmin } = require('../middleware/roles');
+const { logAction } = require('../middleware/audit');
 
-router.route('/')
-  .get(getAllNews) // Public for frontend
-  .post(protect, checkPermissions(['news:create']), createNews);
+// Public routes
+router.get('/', newsController.getAllNews);
+router.get('/:id', newsController.getNewsById);
 
-router.route('/:id')
-  .get(getNewsById) // Public for frontend
-  .put(protect, checkPermissions(['news:edit']), updateNews)
-  .delete(protect, checkPermissions(['news:delete']), deleteNews);
+// Protected routes
+router.post('/', verifyToken, isEditorOrAdmin, logAction('Create News'), newsController.createNews);
+router.put('/:id', verifyToken, isEditorOrAdmin, logAction('Update News'), newsController.updateNews);
+router.delete('/:id', verifyToken, isEditorOrAdmin, logAction('Delete News'), newsController.deleteNews);
 
 module.exports = router;

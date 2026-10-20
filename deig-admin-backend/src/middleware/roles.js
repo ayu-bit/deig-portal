@@ -1,19 +1,24 @@
-const checkPermissions = (requiredPermissions) => {
-  return (req, res, next) => {
-    if (!req.user || !req.user.role || !req.user.role.permissions) {
-      return res.status(403).json({ message: 'Forbidden: No role or permissions found' });
+
+const checkRole = (roles) => (req, res, next) => {
+    if (!req.user) {
+        return res.status(401).json({ message: "Authentication required." });
     }
 
-    const userPermissions = new Set(req.user.role.permissions);
-
-    const hasPermission = requiredPermissions.every(p => userPermissions.has(p));
-
-    if (hasPermission) {
-      next();
-    } else {
-      res.status(403).json({ message: 'Forbidden: You do not have the required permissions' });
+    const userRole = req.user.Role.name;
+    if (roles.includes(userRole)) {
+        return next();
     }
-  };
+
+    return res.status(403).json({ message: "Forbidden: You do not have the required role to access this resource." });
 };
 
-module.exports = { checkPermissions };
+const isAdmin = checkRole(['Admin']);
+const isHROrAdmin = checkRole(['HR Manager', 'Admin']);
+const isEditorOrAdmin = checkRole(['Editor', 'Admin']);
+
+module.exports = {
+    checkRole,
+    isAdmin,
+    isHROrAdmin,
+    isEditorOrAdmin,
+};

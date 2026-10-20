@@ -1,1 +1,10 @@
 node_modules
+dist
+.env
+.env.local
+database.sqlite
+database.sqlite-wal
+database.sqlite-shm
+.DS_Store
+.aistudio
+migrated_prompt_history
