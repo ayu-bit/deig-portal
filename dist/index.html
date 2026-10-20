@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' fill='%231075BB'%3E%3Cpath d='M50 0 L100 25 V75 L50 100 L0 75 V25 L50 0 Z M50 15 L85 32.5 V67.5 L50 85 L15 67.5 V32.5 L50 15 Z M50 25 L75 37.5 V62.5 L50 75 L25 62.5 V37.5 L50 25 Z'/%3E%3C/svg%3E" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>DEIG – Defense Industry Engineering Group</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            colors: {
+              primary: '#1075BB',
+              primaryDark: '#0D5D95',
+              accentStrong: '#F27D26',
+              accentHover: '#D96D1F',
+              danger: '#E11D48',
+              lightBg: '#F8FAFC',
+              textDark: '#0F172A',
+              textLight: '#F1F5F9',
+              goldAccent: '#FACC15',
+              surface: '#FFFFFF',
+              surfaceDark: '#1E293B',
+            },
+            fontFamily: {
+              'sans': ['Inter', 'system-ui', 'sans-serif'],
+              'display': ['Space Grotesk', 'Montserrat', 'sans-serif'],
+              'nyala': ['Nyala', 'sans-serif'],
+            }
+          }
+        }
+      }
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@500;700&family=Montserrat:wght@700;800&family=Nyala&display=swap" rel="stylesheet">
+    <style>
+      :root {
+        --grid-color: rgba(16, 117, 187, 0.05);
+        --primary: #1075BB;
+      }
+      .dark {
+        --grid-color: rgba(255, 255, 255, 0.03);
+      }
+      @keyframes animated-grid {
+        from { background-position: 0 0; }
+        to { background-position: 100px 100px; }
+      }
+      body {
+        font-family: 'Inter', sans-serif;
+        background-color: #F8FAFC;
+        color: #0F172A;
+      }
+      .dark body {
+        background-color: #0F172A;
+        color: #F1F5F9;
+      }
+      body.lang-am {
+        font-family: 'Nyala', 'Inter', sans-serif;
+      }
+      .animated-grid-bg {
+        background-image:
+          linear-gradient(var(--grid-color) 1px, transparent 1px),
+          linear-gradient(to right, var(--grid-color) 1px, transparent 1px);
+        background-size: 50px 50px;
+        animation: animated-grid 15s linear infinite;
+      }
+      h1, h2, h3, h4, .font-display {
+        font-family: 'Space Grotesk', 'Montserrat', sans-serif;
+        letter-spacing: -0.02em;
+      }
+      *:focus-visible {
+        outline: 2px solid var(--primary);
+        outline-offset: 2px;
+      }
+      .btn-glow:hover {
+        box-shadow: 0 0 15px rgba(16, 117, 187, 0.4);
+        transform: translateY(-1px);
+      }
+      .animate-fadeIn {
+        animation: fadeIn 0.5s ease-in-out;
+      }
+      @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+      }
+      @keyframes slow-zoom {
+        from { transform: scale(1); }
+        to { transform: scale(1.05); }
+      }
+      .animate-slow-zoom {
+        animation: slow-zoom 25s ease-in-out infinite alternate;
+      }
+      
+      @keyframes tracking-in {
+        0% {
+          letter-spacing: -0.5em;
+          opacity: 0;
+        }
+        40% {
+          opacity: 0.6;
+        }
+        100% {
+          letter-spacing: normal;
+          opacity: 1;
+        }
+      }
+      .animate-tracking-in {
+        animation: tracking-in 1s cubic-bezier(0.215, 0.610, 0.355, 1.000) both;
+      }
+
+      .logo-path {
+        stroke-dasharray: 1000;
+        stroke-dashoffset: 1000;
+        animation: draw-logo 2s ease-in-out forwards;
+      }
+       @keyframes draw-logo {
+        to {
+          stroke-dashoffset: 0;
+        }
+      }
+
+      /* Scroll animations */
+      .animate-scroll-fade-up {
+        opacity: 0;
+        transform: translateY(30px);
+        transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+      }
+      .animate-scroll-fade-up.is-visible {
+        opacity: 1;
+        transform: translateY(0);
+      }
+
+      /* Unified Image Styling */
+      .image-wrapper {
+        position: relative;
+        overflow: hidden;
+        background-color: #FFFFFF; /* white */
+        transition: background-color 0.3s ease-in-out;
+      }
+      .dark .image-wrapper {
+        background-color: #111827; /* gray-900 */
+      }
+      .image-wrapper.tint-green:hover {
+         background-color: rgba(9, 60, 43, 0.1); /* primaryDark with opacity */
+      }
+      .image-wrapper > img, .image-wrapper > video {
+        opacity: 1;
+        transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+      }
+      .image-wrapper:hover > img {
+        opacity: 0.9;
+      }
+      .blueprint-overlay::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background-image:
+          linear-gradient(rgba(9, 60, 43, 0.07) 1px, transparent 1px),
+          linear-gradient(to right, rgba(9, 60, 43, 0.07) 1px, transparent 1px);
+        background-size: 2rem 2rem;
+        pointer-events: none;
+        z-index: 1;
+      }
+
+      /* Interactive Map */
+      @keyframes pulse {
+        0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 154, 46, 0.7); }
+        50% { transform: scale(1.1); box-shadow: 0 0 0 10px rgba(255, 154, 46, 0); }
+      }
+      .map-pin {
+        animation: pulse 2s infinite;
+      }
+
+      /* Timeline */
+      .timeline-container {
+        scrollbar-width: thin;
+        scrollbar-color: #093c2b #052118;
+      }
+      .timeline-container::-webkit-scrollbar {
+        height: 8px;
+      }
+      .timeline-container::-webkit-scrollbar-track {
+        background: #052118;
+        border-radius: 10px;
+      }
+      .timeline-container::-webkit-scrollbar-thumb {
+        background-color: #093c2b;
+        border-radius: 10px;
+        border: 2px solid #052118;
+      }
+      
+      /* Loader Animation */
+      .loader {
+        animation: fadeOut 0.5s ease-in-out forwards;
+        animation-delay: 2s;
+      }
+      .loader-logo {
+        animation: fadeIn 1s ease-in-out;
+      }
+      @keyframes fadeOut {
+        from { opacity: 1; }
+        to { opacity: 0; pointer-events: none; }
+      }
+      
+      /* Lightbox slide animations */
+      @keyframes slide-in-from-right {
+        from { transform: translateX(50px); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+      }
+      .animate-slide-in-from-right {
+        animation: slide-in-from-right 0.3s ease-out forwards;
+      }
+      @keyframes slide-in-from-left {
+        from { transform: translateX(-50px); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+      }
+      .animate-slide-in-from-left {
+        animation: slide-in-from-left 0.3s ease-out forwards;
+      }
+
+      /* Footer */
+      .footer-divider {
+        height: 1px;
+        background: linear-gradient(90deg, transparent, var(--primary) 40%, var(--primary) 60%, transparent);
+        opacity: 0.3;
+      }
+      .footer-bg {
+        background-color: #0F172A;
+        background-image: radial-gradient(circle at 2px 2px, rgba(255,255,255,0.05) 1px, transparent 0);
+        background-size: 24px 24px;
+      }
+
+      /* Radar Sweep Animation */
+      @keyframes radar-sweep {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+      .radar-sweep-overlay {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 200vw;
+        height: 200vw;
+        max-width: 2000px;
+        max-height: 2000px;
+        transform-origin: center center;
+        background: conic-gradient(
+          from 0deg,
+          transparent 0%,
+          transparent 70%,
+          rgba(16, 117, 187, 0.05) 85%,
+          rgba(16, 117, 187, 0.15) 95%,
+          rgba(16, 117, 187, 0.05) 100%
+        );
+        animation: radar-sweep 10s linear infinite;
+        pointer-events: none;
+        opacity: 0.4;
+        transform: translate(-50%, -50%);
+      }
+
+      /* Scroll Indicator */
+      .scroll-indicator {
+        width: 28px;
+        height: 48px;
+        border: 2px solid #FFFFFF;
+        border-radius: 14px;
+        position: relative;
+        animation: bounce-scroll-indicator 2.5s infinite;
+      }
+      .scroll-indicator-wheel {
+        position: absolute;
+        top: 8px;
+        left: 50%;
+        width: 4px;
+        height: 8px;
+        background: #FFFFFF;
+        border-radius: 2px;
+        transform: translateX(-50%);
+        animation: scroll-wheel-animation 2s infinite;
+      }
+      @keyframes scroll-wheel-animation {
+        from {
+          opacity: 1;
+          transform: translate(-50%, 0);
+        }
+        to {
+          opacity: 0;
+          transform: translate(-50%, 15px);
+        }
+      }
+      @keyframes bounce-scroll-indicator {
+        0%, 100% {
+          transform: translateY(0);
+        }
+        50% {
+          transform: translateY(-10px);
+        }
+      }
+    </style>
+
+<script type="importmap">
+{
+  "imports": {
+    "react": "https://aistudiocdn.com/react@^19.2.0",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
+    "react/": "https://aistudiocdn.com/react@^19.2.0/",
+    "vite": "https://aistudiocdn.com/vite@^7.2.6",
+    "@vitejs/plugin-react": "https://aistudiocdn.com/@vitejs/plugin-react@^5.1.1"
+  }
+}
+</script>
+  <script type="module" crossorigin src="/assets/index-C3wmeFp8.js"></script>
+</head>
+  <body>
+    <div id="root"></div>
+    <!-- Load React and ReactDOM from UMD builds to avoid CORS issues -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    
+  </body>
+</html>
