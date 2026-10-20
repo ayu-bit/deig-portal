@@ -1,40 +1,43 @@
-
 {
-  "name": "deig-admin-backend",
-  "version": "1.0.0",
-  "description": "Backend for the DEIG corporate website admin panel.",
-  "main": "src/app.js",
+  "name": "deig-frontend",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
   "scripts": {
-    "build": "echo 'No build step required for backend'",
-    "start": "node src/app.js",
-    "dev": "nodemon src/app.js",
-    "db:migrate": "sequelize-cli db:migrate",
-    "db:seed:all": "sequelize-cli db:seed:all"
+    "dev": "tsx server.ts",
+    "build": "tsc && vite build",
+    "lint": "tsc --noEmit",
+    "start": "NODE_ENV=production tsx server.ts",
+    "preview": "vite preview"
   },
-  "keywords": [
-    "deig",
-    "express",
-    "sequelize",
-    "jwt"
-  ],
-  "author": "DEIG Development Team",
-  "license": "ISC",
   "dependencies": {
-    "bcryptjs": "^2.4.3",
-    "cors": "^2.8.5",
-    "dotenv": "^16.3.1",
-    "express": "^4.18.2",
-    "helmet": "^7.1.0",
-    "joi": "^17.11.0",
-    "jsonwebtoken": "^9.0.2",
-    "morgan": "^1.10.0",
-    "multer": "^1.4.5-lts.1",
-    "pg": "^8.11.3",
+    "bcryptjs": "^3.0.3",
+    "better-sqlite3": "^12.8.0",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.1",
+    "express": "^5.2.1",
+    "framer-motion": "^10.16.4",
+    "helmet": "^8.1.0",
+    "joi": "^18.1.2",
+    "jsonwebtoken": "^9.0.3",
+    "morgan": "^1.10.1",
+    "multer": "^2.1.1",
+    "pg": "^8.20.0",
     "pg-hstore": "^2.3.4",
-    "sequelize": "^6.35.2"
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "sequelize": "^6.37.8",
+    "sqlite3": "^6.0.1",
+    "tsx": "^4.21.0",
+    "uuid": "^13.0.0",
+    "@types/react": "^18.2.37",
+    "@types/react-dom": "^18.2.15",
+    "@vitejs/plugin-react": "^4.2.0",
+    "autoprefixer": "^10.4.16",
+    "postcss": "^8.4.31",
+    "tailwindcss": "^3.3.5",
+    "typescript": "^5.2.2",
+    "vite": "^5.0.0"
   },
-  "devDependencies": {
-    "nodemon": "^3.0.2",
-    "sequelize-cli": "^6.6.2"
-  }
+  "devDependencies": {}
 }

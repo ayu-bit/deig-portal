@@ -1,7 +1,5 @@
 require('dotenv').config();
 const { Sequelize } = require('sequelize');
-const Database = require('better-sqlite3');
-
 function normalizeParams(params) {
   if (!params) return [];
   if (Array.isArray(params)) return params;
@@ -18,6 +16,17 @@ function normalizeParams(params) {
 }
 
 function createBetterSqlite3Adapter() {
+  let Database;
+  try {
+    Database = require('better-sqlite3');
+  } catch (err) {
+    try {
+      return require('sqlite3').verbose();
+    } catch (_e) {
+      throw new Error("Neither 'better-sqlite3' nor 'sqlite3' is installed: " + err.message);
+    }
+  }
+
   class DatabaseAdapter {
     constructor(filename, mode, callback) {
       if (typeof mode === 'function') {
