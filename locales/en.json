@@ -1,0 +1,540 @@
+
+{
+  "common": {
+    "learnMore": "Learn More",
+    "all": "All",
+    "loading": "Loading..."
+  },
+  "header": {
+    "home": "Home",
+    "about": "About",
+    "industry": "Industry",
+    "production": "Production",
+    "news": "News",
+    "vacancy": "Vacancy",
+    "contact": "Contact"
+  },
+  "footer": {
+    "tagline": "Engineering Ethiopia's technological sovereignty and national security.",
+    "quickLinks": "Quick Links",
+    "aboutUs": "About Us",
+    "ourIndustries": "Our Industries",
+    "careers": "Careers",
+    "procurement": "Procurement",
+    "industries": "Industries",
+    "contactInfo": "Contact Info",
+    "address": "123 Defense Road, Addis Ababa, Ethiopia",
+    "email": "contact@deig.gov.et",
+    "phone": "+251 11 123 4567",
+    "copyright": "DEIG - Defense Industry Engineering Group. All Rights Reserved.",
+    "privacyPolicy": "Privacy Policy",
+    "termsOfService": "Terms of Service",
+    "adminLogin": "Admin Login"
+  },
+  "home": {
+    "hero": {
+      "title": "Engineering Excellence for National Defense",
+      "subtitle": "DEIG is Ethiopia's leading force in defense technology, innovation, and engineering excellence, driving national self-reliance and industrial modernization.",
+      "buttonExplore": "Explore Our Industries",
+      "buttonAbout": "About DEIG"
+    },
+    "who_we_are": {
+      "title": "Who We Are",
+      "mission_vision_title": "Our Strategic Role",
+      "mission_label": "Mission",
+      "mission_text": "To enhance national defense capabilities through indigenous engineering solutions, reducing dependency on foreign imports while building local expertise and manufacturing capacity.",
+      "vision_label": "Vision",
+      "vision_text": "To be a globally recognized leader in defense technology and manufacturing, renowned for our engineering prowess and strategic importance.",
+      "history_title": "A Brief History",
+      "timeline_link": "Explore Our Full Journey"
+    },
+    "industry_divisions": {
+      "title": "Our Industry Divisions",
+      "subtitle": "A synergistic collective of specialized engineering groups dedicated to advancing national defense capabilities across multiple domains."
+    },
+    "capabilities": {
+      "title": "Key Capabilities & Strategic Focus",
+      "subtitle": "Our core functions are geared towards providing comprehensive, end-to-end solutions for national defense.",
+      "production_title": "Military Production",
+      "production_desc": "State-of-the-art manufacturing of armaments, vehicles, and electronics.",
+      "engineering_title": "Manufacturing Engineering",
+      "engineering_desc": "Precision engineering and advanced process optimization.",
+      "rd_title": "Research & Development",
+      "rd_desc": "Driving the future of defense technology through dedicated R&D.",
+      "innovation_title": "Technology Innovation",
+      "innovation_desc": "Pioneering new solutions in AI, composites, and autonomous systems.",
+      "logistics_title": "Logistics & Supply Chain",
+      "logistics_desc": "Ensuring operational readiness through robust supply chain management.",
+      "modernization_title": "Industrial Modernization",
+      "modernization_desc": "Leading programs to upgrade national industrial capabilities."
+    },
+    "achievements": {
+        "title": "Major Achievements & Impact",
+        "subtitle": "Our commitment to excellence is reflected in our tangible contributions to national security and technological advancement."
+    },
+    "impact": {
+      "innovation": "Years of Innovation",
+      "projects": "Strategic Projects Completed",
+      "staff": "Skilled Engineers & Staff"
+    },
+    "leadership": {
+      "title": "A Message From Our Leadership",
+      "quote": "\"Our mandate is not merely to manufacture, but to innovate and master the technologies that will secure our nation's future. Every project we undertake is a testament to our unwavering commitment to excellence and to the strength of Ethiopia.\"",
+      "name": "Director General",
+      "org": "Defense Industry Engineering Group"
+    },
+    "news": {
+      "title": "Latest News & Updates",
+      "subtitle": "Stay informed on the latest developments, innovations, and announcements from DEIG.",
+      "readMore": "Read More →",
+      "articles": {
+        "a1": { "date": "October 26, 2023", "category": "Innovation", "title": "DEIG Unveils Next-Gen Drone Tech", "excerpt": "A new milestone in domestic capability has been reached with our latest autonomous aerial system." },
+        "a2": { "date": "October 15, 2023", "category": "Partnership", "title": "New University Partnership Announced", "excerpt": "In partnership with AASTU, DEIG is launching a new scholarship to foster the next generation of engineers." },
+        "a3": { "date": "September 28, 2023", "category": "Expansion", "title": "New Production Line Inaugurated", "excerpt": "The HAEI division has completed a major facility expansion, doubling its production capacity." }
+      }
+    },
+    "facilities": {
+        "title": "Our Facilities (HQ + Industrial Zones)",
+        "subtitle": "A network of advanced manufacturing and research centers strategically located across the nation."
+    },
+    "innovation": {
+        "title": "Innovation & R&D",
+        "subtitle": "Driving the future of defense through cutting-edge research and technology adoption.",
+        "cnc": { "title": "Precision CNC Machining", "desc": "5-axis CNC capabilities for complex component manufacturing with micron-level precision." },
+        "composites": { "title": "Advanced Composites", "desc": "Carbon fiber and advanced composite manufacturing for lightweight, high-strength components." },
+        "additive": { "title": "Additive Manufacturing", "desc": "3D printing and additive manufacturing for rapid prototyping and complex geometries." }
+    },
+    "partners": {
+        "title": "Partners & Collaborations",
+        "subtitle": "Working together with key stakeholders to strengthen Ethiopia's defense ecosystem."
+    },
+    "gallery": {
+        "title": "Media Gallery",
+        "subtitle": "A glimpse into our facilities, our people, and the products of our innovation."
+    },
+    "downloads": {
+        "title": "Downloads",
+        "subtitle": "Access official documents and publications from the Defense Industry Engineering Group.",
+        "profile": "Company Profile 2023.pdf",
+        "report": "Annual Report 2022.pdf",
+        "brochure": "Product & Services Brochure.pdf"
+    }
+  },
+  "aboutPage": {
+    "title": "About DEIG",
+    "subtitle": "Engineering the Future of National Defense",
+    "introduction": {
+      "title": "Introduction",
+      "p1": "The Defense Industry Engineering Group (DEIG) is Ethiopia's premier state-owned enterprise dedicated to advancing the nation's defense technology, manufacturing capabilities, and industrial self-reliance.",
+      "p2": "As the central coordinating body for a network of specialized engineering industries, we play a strategic role in national security by designing, developing, and producing a wide array of defense systems and solutions."
+    },
+    "history": {
+      "title": "History & Background"
+    },
+    "missionVision": {
+      "sectionTitle": "Mission, Vision & Core Values",
+      "title": "Our Mission & Vision",
+      "mission_label": "Mission",
+      "vision_label": "Vision",
+      "mission_text": "To develop and sustain a modern, self-reliant, and technologically advanced Ethiopian defense industrial base capable of meeting the nation's security needs and contributing to its economic growth.",
+      "vision_text": "To be a globally recognized leader in defense technology and manufacturing, renowned for our engineering prowess, strategic importance, and unwavering dedication to national sovereignty."
+    },
+    "coreValues": {
+      "title": "Core Values",
+      "integrity_label": "Integrity",
+      "integrity_text": "Upholding the highest ethical standards.",
+      "innovation_label": "Innovation",
+      "innovation_text": "Pushing the boundaries of technology.",
+      "excellence_label": "Excellence",
+      "excellence_text": "A relentless pursuit of quality and precision.",
+      "selfReliance_label": "Self-Reliance",
+      "selfReliance_text": "Building indigenous capacity.",
+      "patriotism_label": "Patriotism",
+      "patriotism_text": "Unwavering commitment to the nation."
+    },
+    "structure": {
+      "title": "Organizational Structure",
+      "hq": "DEIG Leadership & Directorate",
+      "footer": "A synergistic structure ensuring specialized focus and collaborative innovation."
+    },
+    "divisions": {
+      "title": "Our Industry Divisions"
+    },
+    "objectives": {
+      "title": "Strategic Objectives",
+      "modernization_title": "Modernize National Manufacturing",
+      "modernization_desc": "To upgrade and enhance the national defense manufacturing infrastructure with state-of-the-art technology and processes.",
+      "capability_title": "Improve Engineering Capabilities",
+      "capability_desc": "To foster a culture of continuous learning and skill development, ensuring our engineers are at the forefront of their fields.",
+      "innovation_title": "Increase Innovation & R&D",
+      "innovation_desc": "To invest in research and development to create next-generation defense solutions and reduce technological dependence.",
+      "efficiency_title": "Enhance Operational Efficiency",
+      "efficiency_desc": "To optimize our production lines, supply chains, and management practices for greater efficiency and cost-effectiveness."
+    },
+    "leadership": {
+      "title": "Leadership Team"
+    },
+    "quality": {
+      "title": "Quality, Safety & Compliance",
+      "intro": "Our commitment to quality is unwavering. We adhere to internationally recognized standards, including ISO certifications, to ensure every product meets the highest levels of performance, reliability, and safety."
+    },
+    "partners": {
+      "title": "Partnerships & Collaboration"
+    },
+    "achievements": {
+      "title": "Achievements & Milestones",
+      "growth_title": "Economic Growth",
+      "growth_desc": "Stimulating local economies through industrial activity, job creation, and supply chain development.",
+      "tech_title": "Technology Transfer",
+      "tech_desc": "Fostering innovation and knowledge-sharing that benefits the broader civilian technology sector.",
+      "workforce_title": "Workforce Development",
+      "workforce_desc": "Training a highly skilled generation of engineers, technicians, and specialists in advanced manufacturing.",
+      "security_title": "Strengthening Security",
+      "security_desc": "Ensuring national sovereignty and security through the provision of reliable, state-of-the-art defense systems."
+    }
+  },
+  "industryHubPage": {
+    "title": "DEIG Industries",
+    "subtitle": "A synergistic collective of specialized engineering groups dedicated to advancing national defense capabilities across multiple domains.",
+    "divisionsTitle": "Our Eight Industrial Divisions",
+    "mapTitle": "Our National Presence",
+    "capabilitiesTitle": "Cross-Divisional Capabilities"
+  },
+  "industryDetailPage": {
+    "focus": "Primary Focus",
+    "aboutTitle": "About the Industry",
+    "coreCapabilitiesTitle": "Core Capabilities / What We Do",
+    "productsSolutionsTitle": "Products & Solutions",
+    "techInnovationTitle": "Technology & Innovation",
+    "qualityComplianceTitle": "Quality & Compliance",
+    "productionFacilitiesTitle": "Production Facilities",
+    "projectsAchievementsTitle": "Projects & Achievements",
+    "leadershipTitle": "Leadership & Management Team",
+    "newsUpdatesTitle": "News & Updates",
+    "galleryTitle": "Gallery / Media Center",
+    "downloadsTitle": "Downloads",
+    "contactTitle": "Contact Information",
+    "about": {
+      "mandateTitle": "Purpose and Mandate",
+      "parentOrg": "As a key division of the Defense Industry Engineering Group (DEIG), our work contributes to the nation's broader goal of technological sovereignty and self-reliance.",
+      "missionVisionTitle": "Mission & Vision",
+      "missionPlaceholder": "Our mission is to deliver state-of-the-art systems and solutions that provide a decisive advantage to our national defense forces, while our vision is to be a globally recognized center of excellence in our specialized field."
+    },
+    "tech": {
+      "highlightsTitle": "Technical Highlights",
+      "areasTitle": "Areas of Technological Strength",
+      "prodTech": {
+        "title": "Production Technology",
+        "desc": "Utilizing advanced manufacturing processes and state-of-the-art machinery for precision and efficiency."
+      },
+      "automation": {
+        "title": "Automation & Robotics",
+        "desc": "Implementing automated production lines and robotic systems to enhance quality and throughput."
+      },
+      "qa": {
+        "title": "Testing & QA Labs",
+        "desc": "Operating certified labs for rigorous testing, validation, and quality assurance of all products."
+      }
+    },
+    "quality": {
+      "p1": "Commitment to excellence is at the core of our operations. We adhere to rigorous quality management systems to ensure every product and service meets the highest international standards for reliability, safety, and performance.",
+      "adherence": "Standard Adherence",
+      "adherenceDesc": "Strict compliance with military-grade and international quality standards.",
+      "rigorous": "Rigorous Testing",
+      "rigorousDesc": "Comprehensive lifecycle testing from materials to final systems.",
+      "continuous": "Continuous Improvement",
+      "continuousDesc": "Ongoing process optimization and workforce training to elevate quality.",
+      "certifications": "Certifications"
+    },
+    "projects": {
+      "p1": "Below are examples of key projects and achievements that highlight our division's contributions to national defense and technological advancement.",
+      "p1_title": "Next-Gen APC Development",
+      "p1_desc": "Led the design and production of a state-of-the-art Armored Personnel Carrier with modular armor and advanced situational awareness systems.",
+      "p1_category": "Strategic Contribution",
+      "p2_title": "Guided Munitions Program",
+      "p2_desc": "Successfully developed and tested a new series of precision-guided munitions, enhancing standoff engagement capabilities.",
+      "p2_category": "Innovation Project"
+    },
+    "leadership": {
+      "p1": "Our division is led by a team of experienced professionals dedicated to innovation and excellence in defense engineering.",
+      "head": "Divisional Head / General Manager",
+      "placeholder1_name": "Lead Engineer",
+      "placeholder1_title": "Chief of Engineering & R&D",
+      "placeholder2_name": "Operations Director",
+      "placeholder2_title": "Head of Production & Operations"
+    },
+    "news": {
+      "noNews": "No specific news for this division. Showing latest updates from DEIG."
+    },
+    "downloads": {
+      "p1": "Download our official documents for detailed information on our products, capabilities, and technical specifications.",
+      "catalog": "Product Brochure.pdf",
+      "specs": "Technical Sheets.pdf",
+      "brochure": "Corporate Reports.pdf"
+    },
+    "contact": {
+      "p1": "For inquiries, partnerships, or more information about our products and services, please get in touch with our divisional team.",
+      "formTitle": "Send a Direct Message",
+      "formName": "Full Name",
+      "formEmail": "Email Address",
+      "formSubject": "Subject",
+      "formMessage": "Your Message",
+      "formSubmit": "Submit Inquiry",
+      "workingHours": "Work Hours"
+    },
+    "area": "Total Area",
+    "keyFeatures": "Key Features",
+    "showcase3D": "3D Product Showcase",
+    "errorTitle": "Industry Not Found",
+    "errorText": "The industry group you are looking for does not exist or could not be loaded.",
+    "errorButton": "Back to Industries"
+  },
+  "newsPage": {
+    "title": "News & Updates",
+    "subtitle": "Latest announcements, press releases, and industrial updates.",
+    "featuredNewsTitle": "Featured Story",
+    "latestNewsTitle": "Latest News Feed",
+    "searchPlaceholder": "Search news articles...",
+    "filterBy": "Filter by Category:",
+    "allCategories": "All",
+    "categories": {
+      "pressRelease": "Press Releases",
+      "announcement": "Announcements",
+      "publicNotice": "Public Notices",
+      "hqUpdates": "Headquarters Updates",
+      "industryNews": "Industry News",
+      "projects": "Projects",
+      "events": "Events & Exhibitions",
+      "innovation": "Innovation & Technology"
+    },
+    "pressReleasesTitle": "Official Press Releases",
+    "pressReleasesSubtitle": "Formal statements and announcements from the DEIG corporate office.",
+    "eventsTitle": "Events & Media Coverage",
+    "eventsSubtitle": "Find out where we've been and what's next on our agenda.",
+    "event1_title": "National Defense Expo 2023",
+    "event1_desc": "DEIG showcased its latest innovations, including the 'Simien Shield' APC, to national and international delegates.",
+    "event2_title": "Tech & Innovation Summit",
+    "event2_desc": "Our R&D division presented groundbreaking research in materials science and autonomous systems.",
+    "galleryTitle": "Media Gallery",
+    "gallerySubtitle": "A glimpse into our operations, events, and achievements.",
+    "newsletterTitle": "Stay Updated",
+    "newsletterSubtitle": "Subscribe to our newsletter to receive the latest news and updates directly in your inbox.",
+    "newsletterPlaceholder": "Enter your email address",
+    "newsletterButton": "Subscribe",
+    "readMore": "Read More →",
+    "noArticles": "No Articles Found",
+    "noArticlesDesc": "There are no news articles matching your search or filter criteria. Please try again."
+  },
+  "vacancyPage": {
+    "hero": {
+      "title": "Careers at DEIG",
+      "subtitle": "Join our team of professionals shaping the future of engineering and industry."
+    },
+    "introduction": {
+      "title": "Why Join DEIG?",
+      "p1": "Working at DEIG means being part of a mission-critical organization dedicated to national progress. We foster a culture of innovation, excellence, and continuous learning, offering our employees the unique opportunity to work on challenging projects that have a real impact.",
+      "whyJoin": {
+        "impact": "National Impact",
+        "impactDesc": "Contribute directly to Ethiopia's sovereignty and technological advancement.",
+        "projects": "Cutting-Edge Projects",
+        "projectsDesc": "Work on innovative and challenging projects at the forefront of defense engineering.",
+        "growth": "Career Growth",
+        "growthDesc": "Access continuous training, development programs, and clear paths for career progression."
+      }
+    },
+    "openings": "Current Openings",
+    "filterBy": "Filter By:",
+    "applyNow": "Apply Now",
+    "noOpenings": "No Openings Found",
+    "noOpeningsDesc": "There are no positions matching your current filter. Please check back later or submit a general application.",
+    "modal": {
+        "responsibilities": "Responsibilities & Duties",
+        "requirements": "Required Qualifications & Skills",
+        "applyTitle": "Apply for this Position"
+    },
+    "life": {
+        "sectionTitle": "Life at DEIG",
+        "title": "Our Culture & Environment",
+        "p1": "We believe in fostering a collaborative and dynamic workplace where innovation thrives. Our teams are composed of dedicated professionals who are passionate about solving complex challenges. We invest in our people, providing a supportive environment that encourages both personal and professional growth.",
+        "quote": "The opportunity to work on projects of this scale and importance is incredibly rewarding. There's a real sense of shared purpose here.",
+        "quoteAuthor": "Lead Engineer, GAEI"
+    },
+    "training": {
+        "title": "Training & Career Development",
+        "internships": "Internships & Apprenticeships",
+        "internshipsDesc": "Programs for young talent to gain hands-on experience in the defense industry.",
+        "development": "Professional Development",
+        "developmentDesc": "Access to workshops, seminars, and courses to keep skills sharp and up-to-date.",
+        "leadership": "Leadership Training",
+        "leadershipDesc": "Structured programs designed to cultivate the next generation of leaders within DEIG."
+    },
+    "process": {
+      "title": "Application Process",
+      "s1": "Online Submission",
+      "s1Desc": "Submit your application and CV through our secure online portal.",
+      "s2": "Initial Screening",
+      "s2Desc": "Our HR team reviews your application to match your skills with our needs.",
+      "s3": "Technical Assessment",
+      "s3Desc": "Qualified candidates undergo interviews and/or technical assessments.",
+      "s4": "Final Offer",
+      "s4Desc": "Successful candidates receive a formal offer to join the DEIG team."
+    },
+    "faq": {
+        "title": "Frequently Asked Questions",
+        "faq1q": "Can I apply for multiple positions?",
+        "faq1a": "Yes, you are welcome to apply for any positions for which you meet the qualifications. Please submit a separate application for each role.",
+        "faq2q": "How long does the recruitment process take?",
+        "faq2a": "The timeline can vary depending on the role, but we strive to keep candidates informed throughout the process, which typically takes 4-6 weeks from the closing date.",
+        "faq3q": "Are there internships for students?",
+        "faq3a": "Yes, we offer internship programs for university students in relevant fields. These are typically announced on our website and social media channels."
+    },
+    "contact": {
+        "title": "Contact HR",
+        "p1": "For any questions regarding the recruitment process or career opportunities, please contact our Human Resources department.",
+        "email": "hr@deig.gov.et"
+    },
+    "alerts": {
+        "title": "Join Our Talent Network",
+        "subtitle": "Don't see a suitable role? Subscribe for job alerts and be the first to know about new opportunities."
+    },
+    "cv": {
+      "title": "Online CV Submission",
+      "p1": "Don't see a suitable opening? Submit your CV for future consideration.",
+      "name": "Full Name",
+      "email": "Email Address",
+      "position": "Position of Interest",
+      "positionPlaceholder": "e.g., Mechanical Engineer, IT Specialist",
+      "upload": "Upload CV/Resume (PDF, DOC, DOCX)",
+      "submit": "Submit Application"
+    }
+  },
+  "contactPage": {
+    "title": "Get in Touch",
+    "subtitle": "We are here to help and answer any question you might have. Reach out to our headquarters or specific divisions for inquiries.",
+    "overview": {
+      "title": "Contact Overview",
+      "p1": "Your inquiries are important to us. For general questions, please use the main contact form or headquarters information below. For specific needs related to our industrial divisions, please refer to their dedicated contact details."
+    },
+    "main": {
+      "title": "Main Contact Information"
+    },
+    "hq": {
+      "title": "Headquarters Contact Information",
+      "addressLabel": "Address",
+      "addressValue": "Defense Industry Engineering Group HQ, Addis Ababa, Ethiopia",
+      "phoneLabel": "Phone Number",
+      "phoneValue": "+251 11 123 4567",
+      "emailLabel": "General Email",
+      "emailValue": "contact@deig.gov.et",
+      "hoursLabel": "Office Hours",
+      "hoursValue": "Monday - Friday, 8:00 AM - 5:00 PM"
+    },
+    "form": {
+      "title": "Send a Message",
+      "name": "Full Name",
+      "email": "Email Address",
+      "subject": "Subject",
+      "message": "Message",
+      "department": "Inquiry Regarding",
+      "depts": {
+          "general": "General Inquiries",
+          "hr": "Human Resources / Careers",
+          "procurement": "Procurement / Tenders",
+          "media": "Media & Press"
+      },
+      "submit": "Send Message",
+      "success": "Your message has been sent successfully! We will get back to you shortly."
+    },
+    "industryContacts": {
+        "title": "Industry Division Contacts"
+    },
+    "locationsTitle": "Our Locations",
+    "social": {
+        "sectionTitle": "Connect With Us",
+        "title": "Social Media"
+    },
+    "quickLinks": {
+        "title": "Quick Links",
+        "careers": "Explore Career Opportunities",
+        "tenders": "View Open Tenders"
+    }
+  },
+  "procurementPage": {
+      "title": "Procurement & Tenders",
+      "subtitle": "Partnering with industry leaders to build a robust national defense supply chain.",
+      "guidelinesTitle": "Our Procurement Guidelines",
+      "guideline1": "Commitment to fair, transparent, and competitive procurement processes.",
+      "guideline2": "Adherence to national and international standards for quality and ethics.",
+      "guideline3": "Emphasis on building long-term, strategic partnerships with reliable suppliers.",
+      "guideline4": "Encouragement of local content and capacity building within the supply chain.",
+      "guideline5": "Strict compliance with all legal and regulatory requirements.",
+      "getInvolvedTitle": "Get Involved",
+      "tendersTitle": "View Open Tenders",
+      "tendersDesc": "Explore current procurement opportunities and find detailed information on active tenders.",
+      "tendersBtn": "Browse Tenders",
+      "supplierTitle": "Supplier Registration",
+      "supplierDesc": "Register your company to be considered for future procurement needs and partnership opportunities.",
+      "supplierBtn": "Register Now"
+  },
+  "productionPage": {
+    "title": "Production & Manufacturing Excellence",
+    "subtitle": "Leveraging advanced technology and precision engineering to deliver superior defense solutions.",
+    "overview": {
+      "title": "Overview of Production Operations",
+      "p1": "Our production philosophy is centered on precision, reliability, and efficiency. Adhering to the strictest international manufacturing standards, we operate state-of-the-art facilities designed for the end-to-end production of advanced defense systems. Our key capabilities span the entire manufacturing lifecycle, from raw material processing to final system integration and testing."
+    },
+    "divisions": {
+      "title": "Production Divisions"
+    },
+    "process": {
+      "title": "Our Production Process Flow",
+      "s1": { "title": "Raw Material Preparation", "desc": "Sourcing and rigorous inspection of high-grade materials to meet stringent specifications." },
+      "s2": { "title": "Component Manufacturing", "desc": "Utilizing CNC machining, forging, and composite fabrication to produce precision components." },
+      "s3": { "title": "Assembly & Integration", "desc": "Systematic assembly of components into subsystems and final products on dedicated production lines." },
+      "s4": { "title": "Testing & Validation", "desc": "Comprehensive testing of every component and system for performance, reliability, and safety." },
+      "s5": { "title": "Quality Control", "desc": "Continuous quality assurance checks at every stage to ensure adherence to standards." },
+      "s6": { "title": "Packaging & Delivery", "desc": "Secure, military-grade packaging and logistical management for safe delivery." }
+    },
+    "tech": {
+      "title": "Technologies & Manufacturing Systems",
+      "cnc": { "title": "CNC Machining", "desc": "High-precision, multi-axis CNC machines for complex and intricate component manufacturing." },
+      "robotics": { "title": "Robotics & Automation", "desc": "Automated welding, assembly, and material handling to ensure consistency and efficiency." },
+      "cadcam": { "title": "CAD/CAM Systems", "desc": "Integrated design and manufacturing software for seamless transition from digital model to physical product." }
+    },
+    "capacity": {
+      "title": "Production Capacity & Infrastructure",
+      "area": "Total Production Area",
+      "lines": "Dedicated Production Lines",
+      "staff": "Skilled Production Staff"
+    },
+    "quality": {
+      "title": "Quality Assurance & Testing",
+      "p1": "Quality is the bedrock of our manufacturing process. Our dedicated Quality Assurance department employs a multi-faceted approach to ensure every product that leaves our facilities is flawless, reliable, and meets or exceeds all required specifications."
+    },
+    "rd": {
+      "title": "R&D in Production",
+      "p1": "Innovation is integrated directly into our production floor. We invest in continuous improvement programs and prototyping facilities to refine manufacturing processes, adopt new technologies, and enhance product performance."
+    },
+    "safety": {
+      "title": "Environmental & Safety Standards",
+      "p1": "We are committed to responsible manufacturing. Our operations adhere to strict environmental and safety protocols to ensure the well-being of our workforce and the protection of our environment through waste management and energy efficiency programs."
+    },
+    "projects": {
+      "title": "Major Projects & Achievements"
+    },
+    "gallery": {
+      "title": "Production Gallery"
+    },
+    "downloads": {
+      "title": "Downloads",
+      "report": "Annual Production Report.pdf",
+      "brochure": "Manufacturing Capabilities Brochure.pdf"
+    },
+    "contact": {
+      "title": "Contact for Production Inquiries",
+      "p1": "For inquiries related to our production capabilities, partnerships, or procurement, please contact our production management team.",
+      "dept": "Production Department",
+      "email": "production.info@deig.gov.et"
+    }
+  }
+}

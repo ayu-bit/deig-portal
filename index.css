@@ -1,0 +1,196 @@
+@import "tailwindcss/base";
+@import "tailwindcss/components";
+@import "tailwindcss/utilities";
+
+/* --- UI Design Elements from index.html --- */
+html, body {
+  scroll-behavior: smooth;
+  font-family: 'Lato', sans-serif;
+  background-image: linear-gradient(rgba(16, 117, 187, 0.03) 1px, transparent 1px),
+                    linear-gradient(90deg, rgba(16, 117, 187, 0.03) 1px, transparent 1px);
+  background-size: 30px 30px;
+}
+
+.font-montserrat { font-family: 'Montserrat', sans-serif; }
+.font-lato { font-family: 'Lato', sans-serif; }
+.font-roboto-condensed { font-family: 'Roboto Condensed', sans-serif; }
+.font-roboto { font-family: 'Roboto', sans-serif; }
+
+/* --- Custom Header Fonts --- */
+.font-verdana { font-family: 'Verdana', sans-serif; }
+.font-nokia-pure { font-family: 'Nokia Pure Headline', sans-serif; }
+
+/* --- Animation Keyframes --- */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes trackIn {
+  from { letter-spacing: 0.5em; opacity: 0; }
+  to { letter-spacing: normal; opacity: 1; }
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes zoomIn {
+  from { transform: scale(1); }
+  to { transform: scale(1.1); }
+}
+@keyframes drawStroke {
+  to { stroke-dashoffset: 0; }
+}
+@keyframes pulse {
+  0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(16, 117, 187, 0.7); }
+  50% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(16, 117, 187, 0); }
+}
+@keyframes fadeDown {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+@keyframes scanline {
+  0% { top: -100%; }
+  100% { top: 100%; }
+}
+
+/* --- Animation Trigger Classes --- */
+.animate-on-scroll {
+  opacity: 0;
+  transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+}
+.is-visible {
+  opacity: 1;
+  animation: fadeInUp 0.8s ease-out forwards;
+}
+.animate-track-in {
+  animation: trackIn 1.5s cubic-bezier(0.215, 0.610, 0.355, 1.000) forwards;
+}
+.animate-bg-zoom .bg-zoom-element {
+    animation: zoomIn 15s ease-out forwards;
+}
+.animate-fade-down {
+  animation: fadeDown 0.3s ease-out forwards;
+}
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out forwards;
+}
+.loader-gear {
+  animation: spin 2s linear infinite;
+}
+.animate-pulse-subtle {
+  animation: pulse 2s infinite cubic-bezier(0.4, 0, 0.6, 1);
+}
+.animate-scanline {
+  animation: scanline 4s linear infinite;
+  background: linear-gradient(to bottom, transparent, rgba(16, 117, 187, 0.2), transparent);
+  width: 100%;
+  height: 20%;
+  position: absolute;
+  z-index: 10;
+}
+
+/* --- Hover Effects --- */
+.card-hover-effect {
+   transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.card-hover-effect:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 12px 24px rgba(16, 117, 187, 0.2);
+}
+.card-hover-effect .card-title {
+    transition: color 0.3s ease;
+}
+.card-hover-effect:hover .card-title {
+    color: #1075BB;
+}
+.product-card-overlay {
+    opacity: 0;
+    transform: translateY(100%);
+    background: linear-gradient(to top, rgba(16, 117, 187, 0.9), transparent);
+    transition: opacity 0.4s ease-in-out, transform 0.4s ease-in-out;
+}
+.group:hover .product-card-overlay {
+    opacity: 1;
+    transform: translateY(0);
+}
+.product-card-text {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: transform 0.4s ease-in-out 0.2s, opacity 0.4s ease-in-out 0.2s;
+}
+.group:hover .product-card-text {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* --- Image & Media Treatment --- */
+.image-container {
+    position: relative;
+    overflow: hidden;
+    background-color: #04253D; /* Blue-900 */
+}
+.image-container img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    filter: grayscale(0.8);
+    transition: filter 0.4s ease, transform 0.4s ease;
+}
+.image-container:hover img {
+    filter: grayscale(0);
+    transform: scale(1.05);
+}
+.image-container::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-color: #1075BB;
+    mix-blend-mode: screen;
+    opacity: 0.2;
+    pointer-events: none;
+    z-index: 1;
+    transition: opacity 0.4s ease;
+}
+.image-container:hover::before {
+    opacity: 0.1;
+}
+.blueprint-overlay::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-image:
+        linear-gradient(rgba(255, 255, 255, 0.1) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.1) 1px, transparent 1px);
+    background-size: 25px 25px;
+    mix-blend-mode: overlay;
+    pointer-events: none;
+    z-index: 2;
+    opacity: 0.3;
+}
+
+/* --- Admin Panel UI --- */
+.sidebar-transition {
+  transition: width 0.3s ease-in-out, margin-left 0.3s ease-in-out;
+}
+.admin-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+.admin-scrollbar::-webkit-scrollbar-track {
+  background-color: #f0f9ff;
+}
+.admin-scrollbar::-webkit-scrollbar-thumb {
+  background-color: #1075BB;
+  border-radius: 3px;
+}
+.admin-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: #0C568C; /* Blue-600 */
+}
+.admin-breadcrumb > *:not(:last-child)::after {
+  content: '/';
+  margin: 0 0.5rem;
+  color: #1075BB;
+}
